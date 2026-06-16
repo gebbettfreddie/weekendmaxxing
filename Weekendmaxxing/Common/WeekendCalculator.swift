@@ -1,6 +1,6 @@
 import Foundation
 
-enum WeekendStyle: String, CaseIterable, Identifiable {
+enum WeekendStyle: String, CaseIterable, Identifiable, Codable {
     case fridayToSunday
     case saturdayToSunday
 

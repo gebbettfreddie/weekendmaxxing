@@ -9,6 +9,10 @@ enum AppConfig {
     /// Optional affiliate marker used to build commissionable booking links.
     static var travelpayoutsMarker: String? { nonEmpty(infoString("TravelpayoutsMarker")) }
 
+    /// Optional SerpApi key. When present, the live Google Flights source powers
+    /// the Search / offers screen (Travelpayouts still powers discovery).
+    static var serpApiKey: String? { nonEmpty(infoString("SerpApiKey")) }
+
     /// The `USE_MOCK` build flag (defaults to mock when unset).
     static var useMockFlag: Bool { infoBool("UseMockData", default: true) }
 
@@ -22,18 +26,23 @@ enum AppConfig {
         usesMockData ? "Sample data" : "Live · Travelpayouts"
     }
 
-    /// Builds the trip service for the app. When live, wraps Travelpayouts with a
-    /// mock fallback so the UI degrades gracefully when a route isn't cached.
+    /// Builds the trip service for the app. Discovery uses Travelpayouts (with a
+    /// mock fallback). When a SerpApi key is present, offers use live Google
+    /// Flights (falling back to Travelpayouts, then mock).
     static func makeTripService() -> TripService {
         let mock = MockTripService()
         guard !usesMockData, let token = travelpayoutsToken else {
             return mock
         }
-        let live = TravelpayoutsTripService(
-            token: token,
-            marker: travelpayoutsMarker
-        )
-        return FallbackTripService(primary: live, fallback: mock)
+        let travelpayouts = TravelpayoutsTripService(token: token, marker: travelpayoutsMarker)
+        let travelpayoutsWithMock = FallbackTripService(primary: travelpayouts, fallback: mock)
+
+        guard let serpKey = serpApiKey else {
+            return travelpayoutsWithMock
+        }
+        let serp = SerpApiTripService(apiKey: serpKey)
+        let offers = FallbackTripService(primary: serp, fallback: travelpayoutsWithMock)
+        return HybridTripService(discovery: travelpayoutsWithMock, offersProvider: offers)
     }
 
     // MARK: - Info.plist helpers

@@ -3,6 +3,7 @@ import SwiftUI
 struct RootView: View {
     let tripService: TripService
     @State private var router = AppRouter()
+    @State private var preferences = PreferencesStore.shared
 
     var body: some View {
         @Bindable var router = router
@@ -29,6 +30,10 @@ struct RootView: View {
             NotificationManager.shared.onOpenDeal = { id in
                 router.openDeal(id: id)
             }
+        }
+        .fullScreenCover(isPresented: .constant(!preferences.hasCompletedOnboarding)) {
+            OnboardingView(store: preferences) {}
+                .interactiveDismissDisabled()
         }
     }
 }

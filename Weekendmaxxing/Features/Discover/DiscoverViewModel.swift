@@ -40,8 +40,11 @@ final class DiscoverViewModel {
 
     private let service: TripService
 
-    init(service: TripService) {
+    init(service: TripService, preferences: PreferencesStore = .shared) {
         self.service = service
+        let prefs = preferences.preferences
+        self.maxBudget = prefs.maxBudget
+        self.weekendStyle = prefs.weekendStyle
         regenerateWeekends()
     }
 
