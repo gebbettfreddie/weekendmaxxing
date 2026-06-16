@@ -41,6 +41,44 @@ extension Itinerary {
     }
 }
 
+/// Where a priced offer came from. Used to badge results so cached or sample
+/// prices aren't presented as if they were live, bookable quotes.
+enum OfferSource: String, Codable, Hashable {
+    /// Real-time fares (SerpApi / Google Flights).
+    case live
+    /// Indicative, cached fares (Travelpayouts).
+    case cached
+    /// Fabricated mock data used when no live source is available.
+    case sample
+
+    /// Whether prices may not reflect what the traveller will actually pay.
+    var isApproximate: Bool { self != .live }
+
+    var badgeText: String {
+        switch self {
+        case .live: return "Live prices"
+        case .cached: return "Indicative prices"
+        case .sample: return "Sample prices"
+        }
+    }
+
+    var badgeDetail: String {
+        switch self {
+        case .live: return "Live fares from Google Flights."
+        case .cached: return "Cached estimates — the live price may differ when you book."
+        case .sample: return "Example fares — live prices weren't available for this route."
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .live: return "dot.radiowaves.up.forward"
+        case .cached: return "clock.arrow.circlepath"
+        case .sample: return "shippingbox"
+        }
+    }
+}
+
 /// A concrete, priced round-trip offer.
 struct TripOffer: Identifiable, Hashable, Codable {
     var id: String
@@ -55,6 +93,14 @@ struct TripOffer: Identifiable, Hashable, Codable {
     /// Travelpayouts/Aviasales affiliate link). When present it is preferred
     /// over the generic route-based fallback in `bookingURL`.
     var deepLinkURL: URL? = nil
+    /// Which data source produced this offer (drives the data-source badge).
+    var source: OfferSource = .cached
+}
+
+extension Array where Element == TripOffer {
+    /// The data source representative of a result set. Each provider returns a
+    /// homogeneous list, so the first offer reflects the whole set.
+    var dataSource: OfferSource? { first?.source }
 }
 
 extension TripOffer {

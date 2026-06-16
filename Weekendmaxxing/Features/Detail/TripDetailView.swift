@@ -104,6 +104,9 @@ struct TripDetailView: View {
             case .error(let message):
                 ErrorStateView(message: message) { reload() }
             case .loaded(let list):
+                if let source = list.dataSource, source.isApproximate {
+                    OfferSourceNote(source: source)
+                }
                 ForEach(list) { offer in
                     NavigationLink(value: offer) {
                         OfferRow(offer: offer)

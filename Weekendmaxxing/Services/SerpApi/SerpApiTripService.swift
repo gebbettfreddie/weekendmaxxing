@@ -87,7 +87,8 @@ struct SerpApiTripService: TripService {
                 validatingAirline: validating,
                 validatingAirlineName: firstLeg.airline,
                 destinationCity: city,
-                seatsRemaining: nil
+                seatsRemaining: nil,
+                source: .live
             )
         }
 

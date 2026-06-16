@@ -102,7 +102,8 @@ struct MockTripService: TripService {
                     validatingAirline: carrier.code,
                     validatingAirlineName: carrier.name,
                     destinationCity: city,
-                    seatsRemaining: Int.random(in: 1...9, using: &gen)
+                    seatsRemaining: Int.random(in: 1...9, using: &gen),
+                    source: .sample
                 )
             )
         }

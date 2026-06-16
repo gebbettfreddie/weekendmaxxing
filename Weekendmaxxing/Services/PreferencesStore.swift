@@ -41,6 +41,13 @@ final class PreferencesStore {
         self.hasCompletedOnboarding = true
     }
 
+    /// Clears saved preferences and the onboarding flag so the first-run flow
+    /// is shown again (used by the "Log out" action).
+    func logOut() {
+        preferences = TravelPreferences()
+        hasCompletedOnboarding = false
+    }
+
     private func persistPreferences() {
         if let data = try? JSONEncoder().encode(preferences) {
             defaults.set(data, forKey: Key.preferences)

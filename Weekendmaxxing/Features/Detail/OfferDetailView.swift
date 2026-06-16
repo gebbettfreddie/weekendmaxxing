@@ -20,6 +20,9 @@ struct OfferDetailView: View {
             VStack(spacing: 20) {
                 header
                 summary
+                if offer.source.isApproximate {
+                    OfferSourceNote(source: offer.source)
+                }
                 ItineraryCard(title: "Outbound", date: weekend.departureDate, itinerary: offer.outbound)
                 if let inbound = offer.inbound {
                     ItineraryCard(title: "Return", date: weekend.returnDate, itinerary: inbound)

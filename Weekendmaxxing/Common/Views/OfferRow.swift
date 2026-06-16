@@ -41,6 +41,45 @@ struct OfferRow: View {
     }
 }
 
+/// A small banner explaining where a result set's prices came from, so cached
+/// or sample fares aren't mistaken for live, bookable quotes.
+struct OfferSourceNote: View {
+    let source: OfferSource
+
+    private var tint: Color {
+        switch source {
+        case .live: return .green
+        case .cached: return .orange
+        case .sample: return .secondary
+        }
+    }
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: source.systemImage)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(tint)
+                .frame(width: 20)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(source.badgeText)
+                    .font(.subheadline.weight(.semibold))
+                Text(source.badgeDetail)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(tint.opacity(0.12))
+        )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(source.badgeText). \(source.badgeDetail)")
+    }
+}
+
 /// A single direction's times and route, e.g. "Out  07:45 LGW → 11:10 BCN".
 struct LegLine: View {
     let label: String

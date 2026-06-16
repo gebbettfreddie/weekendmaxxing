@@ -189,6 +189,10 @@ struct SearchView: View {
                     sortMenu
                 }
 
+                if let source = offers.dataSource, source.isApproximate {
+                    OfferSourceNote(source: source)
+                }
+
                 ForEach(offers) { offer in
                     NavigationLink(value: offer) {
                         OfferRow(offer: offer)

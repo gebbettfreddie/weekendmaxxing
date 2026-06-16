@@ -158,7 +158,8 @@ struct TravelpayoutsTripService: TripService {
                 validatingAirlineName: Self.airlineName(for: airline),
                 destinationCity: city,
                 seatsRemaining: nil,
-                deepLinkURL: bookingURL(for: fare.link)
+                deepLinkURL: bookingURL(for: fare.link),
+                source: .cached
             )
         }
 

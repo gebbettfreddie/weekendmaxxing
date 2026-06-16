@@ -3,6 +3,7 @@ import SwiftUI
 struct DiscoverView: View {
     @State private var model: DiscoverViewModel
     @State private var loadTask: Task<Void, Never>?
+    @State private var showLogOutConfirm = false
 
     private let service: TripService
 
@@ -24,12 +25,27 @@ struct DiscoverView: View {
             .background(Color(.systemGroupedBackground))
             .navigationTitle("Weekend escapes")
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        showLogOutConfirm = true
+                    } label: {
+                        Label("Log out", systemImage: "rectangle.portrait.and.arrow.right")
+                    }
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Label(model.dataSourceLabel, systemImage: model.usingSampleData ? "shippingbox" : "dot.radiowaves.up.forward")
                         .labelStyle(.titleAndIcon)
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
+            }
+            .confirmationDialog("Log out?", isPresented: $showLogOutConfirm, titleVisibility: .visible) {
+                Button("Log out", role: .destructive) {
+                    PreferencesStore.shared.logOut()
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("This clears your saved preferences and restarts the welcome flow.")
             }
             .refreshable { await model.load() }
             .task {
@@ -190,6 +206,10 @@ struct DiscoverView: View {
                             .font(.caption)
                             .foregroundStyle(.tertiary)
                     }
+                    Label("Indicative \u{201C}from\u{201D} fares \u{00B7} live prices shown when you open a trip", systemImage: "info.circle")
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                        .padding(.top, 2)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
