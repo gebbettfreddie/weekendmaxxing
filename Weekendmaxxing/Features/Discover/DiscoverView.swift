@@ -141,11 +141,20 @@ struct DiscoverView: View {
     private var weekendChips: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
+                SelectableChip(
+                    title: model.bestPriceTitle,
+                    subtitle: model.bestPriceSubtitle,
+                    isSelected: model.isBestPriceSelected
+                ) {
+                    model.selectBestPrice()
+                    reload()
+                }
+
                 ForEach(Array(model.weekends.enumerated()), id: \.element.id) { index, _ in
                     SelectableChip(
                         title: model.weekendTitle(index),
                         subtitle: model.weekendSubtitle(index),
-                        isSelected: index == model.selectedWeekendIndex
+                        isSelected: model.selection == .weekend(index)
                     ) {
                         model.selectWeekend(index)
                         reload()
@@ -162,7 +171,7 @@ struct DiscoverView: View {
     private var results: some View {
         switch model.state {
         case .idle, .loading:
-            LoadingView()
+            LoadingView(message: model.loadingMessage)
         case .empty:
             EmptyStateView(
                 title: "No trips in budget",
@@ -172,10 +181,17 @@ struct DiscoverView: View {
             ErrorStateView(message: message) { reload() }
         case .loaded(let destinations):
             VStack(alignment: .leading, spacing: 14) {
-                Text("^[\(destinations.count) destination](inflect: true) from London")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("^[\(destinations.count) destination](inflect: true) from London")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    if model.isBestPriceSelected {
+                        Text("Cheapest weekend for each city over the next \(model.bestPriceMonths) months")
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
 
                 ForEach(destinations) { destination in
                     NavigationLink(value: destination) {

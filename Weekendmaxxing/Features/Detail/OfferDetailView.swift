@@ -40,12 +40,7 @@ struct OfferDetailView: View {
     // MARK: - Header
 
     private var header: some View {
-        DestinationBanner(
-            code: city.code,
-            flagEmoji: city.flagEmoji,
-            imageURL: city.photoURL,
-            height: 150
-        )
+        DestinationBanner(city: city, height: 150)
         .overlay(alignment: .bottomLeading) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(city.name)

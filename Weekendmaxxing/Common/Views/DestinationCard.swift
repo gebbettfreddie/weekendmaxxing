@@ -6,12 +6,7 @@ struct DestinationCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            DestinationBanner(
-                code: destination.city.code,
-                flagEmoji: destination.flagEmoji,
-                imageURL: destination.city.photoURL,
-                height: 132
-            )
+            DestinationBanner(city: destination.city, height: 132)
             .overlay(alignment: .topTrailing) {
                 PriceTag(price: destination.price, prefix: "from")
                     .padding(10)

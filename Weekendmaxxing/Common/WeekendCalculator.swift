@@ -55,4 +55,21 @@ enum WeekendCalculator {
             return WeekendWindow(departureDate: departure, returnDate: returnDate)
         }
     }
+
+    /// Every weekend window departing within roughly the next `months` months.
+    /// Used by the "Best price" scan to compare fares across a wide horizon.
+    static func upcomingWeekends(
+        months: Int,
+        from date: Date = Date(),
+        style: WeekendStyle = .fridayToSunday,
+        calendar: Calendar = AppTime.calendar
+    ) -> [WeekendWindow] {
+        guard let horizon = calendar.date(byAdding: .month, value: months, to: date) else {
+            return upcomingWeekends(from: date, style: style, calendar: calendar)
+        }
+        let days = calendar.dateComponents([.day], from: date, to: horizon).day ?? 0
+        let weeks = max(1, days / 7 + 1)
+        return upcomingWeekends(count: weeks, from: date, style: style, calendar: calendar)
+            .filter { $0.departureDate <= horizon }
+    }
 }

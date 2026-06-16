@@ -43,12 +43,7 @@ struct TripDetailView: View {
 
     private var header: some View {
         VStack(spacing: 0) {
-            DestinationBanner(
-                code: destination.city.code,
-                flagEmoji: destination.flagEmoji,
-                imageURL: destination.city.photoURL,
-                height: 180
-            )
+            DestinationBanner(city: destination.city, height: 180)
             .overlay(alignment: .bottomLeading) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(destination.name)
