@@ -16,29 +16,16 @@ struct DiscoverView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
+                    header
                     controls
                     results
                 }
                 .padding(.horizontal)
+                .padding(.top, 8)
                 .padding(.bottom, 24)
             }
             .background(Color(.systemGroupedBackground))
-            .navigationTitle("Weekend escapes")
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button {
-                        showLogOutConfirm = true
-                    } label: {
-                        Label("Log out", systemImage: "rectangle.portrait.and.arrow.right")
-                    }
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Label(model.dataSourceLabel, systemImage: model.usingSampleData ? "shippingbox" : "dot.radiowaves.up.forward")
-                        .labelStyle(.titleAndIcon)
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                }
-            }
+            .toolbar(.hidden, for: .navigationBar)
             .confirmationDialog("Log out?", isPresented: $showLogOutConfirm, titleVisibility: .visible) {
                 Button("Log out", role: .destructive) {
                     PreferencesStore.shared.logOut()
@@ -58,6 +45,28 @@ struct DiscoverView: View {
                     destination: destination
                 )
             }
+        }
+    }
+
+    // MARK: - Header
+
+    private var header: some View {
+        HStack(alignment: .center) {
+            Text("Weekend escapes")
+                .font(.largeTitle.weight(.bold))
+            Spacer()
+            Menu {
+                Button(role: .destructive) {
+                    showLogOutConfirm = true
+                } label: {
+                    Label("Log out", systemImage: "rectangle.portrait.and.arrow.right")
+                }
+            } label: {
+                Image(systemName: "person.crop.circle")
+                    .font(.system(size: 32))
+                    .foregroundStyle(Brand.coral)
+            }
+            .accessibilityLabel("Profile")
         }
     }
 
