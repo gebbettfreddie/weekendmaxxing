@@ -32,4 +32,21 @@ extension City {
 
     var displayName: String { name }
     var subtitle: String { country }
+
+    /// A destination photo for banners/cards. Uses an explicit `imageURL` when
+    /// provided, otherwise derives a stable cityscape photo from the city name.
+    /// Returns `nil` for placeholder cities where only the IATA code is known,
+    /// so the banner falls back to its gradient + flag.
+    var photoURL: URL? {
+        if let imageURL { return imageURL }
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, trimmed.uppercased() != code.uppercased() else { return nil }
+        let keyword = trimmed
+            .folding(options: .diacriticInsensitive, locale: Locale(identifier: "en_US"))
+            .lowercased()
+        let slug = keyword.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? keyword
+        // `lock` keeps the same image for a given city across launches.
+        let lock = SeededGenerator.stableHash(code) % 1000
+        return URL(string: "https://loremflickr.com/800/600/\(slug),city?lock=\(lock)")
+    }
 }

@@ -43,7 +43,7 @@ struct OfferDetailView: View {
         DestinationBanner(
             code: city.code,
             flagEmoji: city.flagEmoji,
-            imageURL: city.imageURL,
+            imageURL: city.photoURL,
             height: 150
         )
         .overlay(alignment: .bottomLeading) {

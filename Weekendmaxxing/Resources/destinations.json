@@ -1,38 +1,570 @@
 [
-  { "code": "PAR", "name": "Paris", "country": "France", "countryCode": "FR", "basePrice": 62 },
-  { "code": "AMS", "name": "Amsterdam", "country": "Netherlands", "countryCode": "NL", "basePrice": 71 },
-  { "code": "BCN", "name": "Barcelona", "country": "Spain", "countryCode": "ES", "basePrice": 56 },
-  { "code": "DUB", "name": "Dublin", "country": "Ireland", "countryCode": "IE", "basePrice": 44 },
-  { "code": "EDI", "name": "Edinburgh", "country": "United Kingdom", "countryCode": "GB", "basePrice": 49 },
-  { "code": "BER", "name": "Berlin", "country": "Germany", "countryCode": "DE", "basePrice": 64 },
-  { "code": "LIS", "name": "Lisbon", "country": "Portugal", "countryCode": "PT", "basePrice": 76 },
-  { "code": "MAD", "name": "Madrid", "country": "Spain", "countryCode": "ES", "basePrice": 69 },
-  { "code": "ROM", "name": "Rome", "country": "Italy", "countryCode": "IT", "basePrice": 66 },
-  { "code": "MIL", "name": "Milan", "country": "Italy", "countryCode": "IT", "basePrice": 58 },
-  { "code": "PRG", "name": "Prague", "country": "Czechia", "countryCode": "CZ", "basePrice": 61 },
-  { "code": "CPH", "name": "Copenhagen", "country": "Denmark", "countryCode": "DK", "basePrice": 79 },
-  { "code": "GVA", "name": "Geneva", "country": "Switzerland", "countryCode": "CH", "basePrice": 72 },
-  { "code": "NCE", "name": "Nice", "country": "France", "countryCode": "FR", "basePrice": 74 },
-  { "code": "OPO", "name": "Porto", "country": "Portugal", "countryCode": "PT", "basePrice": 68 },
-  { "code": "VCE", "name": "Venice", "country": "Italy", "countryCode": "IT", "basePrice": 73 },
-  { "code": "VIE", "name": "Vienna", "country": "Austria", "countryCode": "AT", "basePrice": 78 },
-  { "code": "BRU", "name": "Brussels", "country": "Belgium", "countryCode": "BE", "basePrice": 54 },
-  { "code": "KRK", "name": "Krakow", "country": "Poland", "countryCode": "PL", "basePrice": 53 },
-  { "code": "BUD", "name": "Budapest", "country": "Hungary", "countryCode": "HU", "basePrice": 63 },
-  { "code": "MUC", "name": "Munich", "country": "Germany", "countryCode": "DE", "basePrice": 70 },
-  { "code": "FAO", "name": "Faro", "country": "Portugal", "countryCode": "PT", "basePrice": 70 },
-  { "code": "PMI", "name": "Palma", "country": "Spain", "countryCode": "ES", "basePrice": 75 },
-  { "code": "BIO", "name": "Bilbao", "country": "Spain", "countryCode": "ES", "basePrice": 65 },
-  { "code": "AGP", "name": "Malaga", "country": "Spain", "countryCode": "ES", "basePrice": 72 },
-  { "code": "ATH", "name": "Athens", "country": "Greece", "countryCode": "GR", "basePrice": 96 },
-  { "code": "KEF", "name": "Reykjavik", "country": "Iceland", "countryCode": "IS", "basePrice": 112 },
-  { "code": "STO", "name": "Stockholm", "country": "Sweden", "countryCode": "SE", "basePrice": 88 },
-  { "code": "OSL", "name": "Oslo", "country": "Norway", "countryCode": "NO", "basePrice": 92 },
-  { "code": "HEL", "name": "Helsinki", "country": "Finland", "countryCode": "FI", "basePrice": 99 },
-  { "code": "ZRH", "name": "Zurich", "country": "Switzerland", "countryCode": "CH", "basePrice": 80 },
-  { "code": "DBV", "name": "Dubrovnik", "country": "Croatia", "countryCode": "HR", "basePrice": 90 },
-  { "code": "SPU", "name": "Split", "country": "Croatia", "countryCode": "HR", "basePrice": 85 },
-  { "code": "TFS", "name": "Tenerife", "country": "Spain", "countryCode": "ES", "basePrice": 95 },
-  { "code": "NAP", "name": "Naples", "country": "Italy", "countryCode": "IT", "basePrice": 77 },
-  { "code": "GDN", "name": "Gdansk", "country": "Poland", "countryCode": "PL", "basePrice": 52 }
+  {
+    "code": "PAR",
+    "name": "Paris",
+    "country": "France",
+    "countryCode": "FR",
+    "basePrice": 62,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/La_Tour_Eiffel_vue_de_la_Tour_Saint-Jacques%2C_Paris_ao%C3%BBt_2014_%282%29.jpg?width=1024"
+  },
+  {
+    "code": "AMS",
+    "name": "Amsterdam",
+    "country": "Netherlands",
+    "countryCode": "NL",
+    "basePrice": 71,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Imagen_de_los_canales_conc%C3%A9ntricos_en_%C3%81msterdam.png?width=1024"
+  },
+  {
+    "code": "BCN",
+    "name": "Barcelona",
+    "country": "Spain",
+    "countryCode": "ES",
+    "basePrice": 56,
+    "imageURL": "https://images.unsplash.com/photo-1534001265532-393289eb8ed3?ixid=M3w5Nzg1NjR8MHwxfHNlYXJjaHwxfHxCYXJjZWxvbmElMjBiZWFjaHxlbnwxfDB8fHwxNzgxNjA5NDQ1fDA&ixlib=rb-4.1.0&w=1080&q=80&fm=jpg&fit=crop"
+  },
+  {
+    "code": "DUB",
+    "name": "Dublin",
+    "country": "Ireland",
+    "countryCode": "IE",
+    "basePrice": 44,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Dublin_-_aerial_-_2025-07-07_01.jpg?width=1024"
+  },
+  {
+    "code": "EDI",
+    "name": "Edinburgh",
+    "country": "United Kingdom",
+    "countryCode": "GB",
+    "basePrice": 49,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Skyline_of_Edinburgh.jpg?width=1024"
+  },
+  {
+    "code": "BER",
+    "name": "Berlin",
+    "country": "Germany",
+    "countryCode": "DE",
+    "basePrice": 64,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Museumsinsel_Berlin_Juli_2021_1_%28cropped%29_b.jpg?width=1024"
+  },
+  {
+    "code": "LIS",
+    "name": "Lisbon",
+    "country": "Portugal",
+    "countryCode": "PT",
+    "basePrice": 76,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Lisboa_-_Portugal_%2852597836992%29.jpg?width=1024"
+  },
+  {
+    "code": "MAD",
+    "name": "Madrid",
+    "country": "Spain",
+    "countryCode": "ES",
+    "basePrice": 69,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Plaza_Mayor_De_Madrid_%28215862629%29_edited.jpeg?width=1024"
+  },
+  {
+    "code": "ROM",
+    "name": "Rome",
+    "country": "Italy",
+    "countryCode": "IT",
+    "basePrice": 66,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Trevi_Fountain%2C_Rome%2C_Italy_2_-_May_2007.jpg?width=1024"
+  },
+  {
+    "code": "MIL",
+    "name": "Milan",
+    "country": "Italy",
+    "countryCode": "IT",
+    "basePrice": 58,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Milan_-_Scala_-_Facade.jpg?width=1024"
+  },
+  {
+    "code": "PRG",
+    "name": "Prague",
+    "country": "Czechia",
+    "countryCode": "CZ",
+    "basePrice": 61,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Prague_%286365119737%29.jpg?width=1024"
+  },
+  {
+    "code": "CPH",
+    "name": "Copenhagen",
+    "country": "Denmark",
+    "countryCode": "DK",
+    "basePrice": 79,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/2018_-_Christiansborg_from_the_Marble_Bridge.jpg?width=1024"
+  },
+  {
+    "code": "GVA",
+    "name": "Geneva",
+    "country": "Switzerland",
+    "countryCode": "CH",
+    "basePrice": 72,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Geneve_2005_001_Ork.ch.jpg?width=1024"
+  },
+  {
+    "code": "NCE",
+    "name": "Nice",
+    "country": "France",
+    "countryCode": "FR",
+    "basePrice": 74,
+    "imageURL": "https://images.unsplash.com/photo-1643914729809-4aa59fdc4c17?ixid=M3w5Nzg1NjR8MHwxfHNlYXJjaHwxfHxOaWNlJTIwRnJhbmNlJTIwYmVhY2h8ZW58MXwwfHx8MTc4MTYwOTQ0Nnww&ixlib=rb-4.1.0&w=1080&q=80&fm=jpg&fit=crop"
+  },
+  {
+    "code": "OPO",
+    "name": "Porto",
+    "country": "Portugal",
+    "countryCode": "PT",
+    "basePrice": 68,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Puente_Don_Luis_I%2C_Oporto%2C_Portugal%2C_2012-05-09%2C_DD_13.JPG?width=1024"
+  },
+  {
+    "code": "VCE",
+    "name": "Venice",
+    "country": "Italy",
+    "countryCode": "IT",
+    "basePrice": 73,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Venezia_aerial_view.jpg?width=1024"
+  },
+  {
+    "code": "VIE",
+    "name": "Vienna",
+    "country": "Austria",
+    "countryCode": "AT",
+    "basePrice": 78,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Schoenbrunn_philharmoniker_2012.jpg?width=1024"
+  },
+  {
+    "code": "BRU",
+    "name": "Brussels",
+    "country": "Belgium",
+    "countryCode": "BE",
+    "basePrice": 54,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Grand_Place_Bruselas_2.jpg?width=1024"
+  },
+  {
+    "code": "KRK",
+    "name": "Krakow",
+    "country": "Poland",
+    "countryCode": "PL",
+    "basePrice": 53,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Krakow_Rynek_Glowny_panorama_2.jpg?width=1024"
+  },
+  {
+    "code": "BUD",
+    "name": "Budapest",
+    "country": "Hungary",
+    "countryCode": "HU",
+    "basePrice": 63,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/View_from_Gell%C3%A9rt_Hill_to_the_Danube%2C_Hungary_-_Budapest_%2828493220635%29.jpg?width=1024"
+  },
+  {
+    "code": "MUC",
+    "name": "Munich",
+    "country": "Germany",
+    "countryCode": "DE",
+    "basePrice": 70,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Stadtbild_M%C3%BCnchen.jpg?width=1024"
+  },
+  {
+    "code": "FAO",
+    "name": "Faro",
+    "country": "Portugal",
+    "countryCode": "PT",
+    "basePrice": 70,
+    "imageURL": "https://images.unsplash.com/photo-1703194887679-406a9b5e7cf6?ixid=M3w5Nzg1NjR8MHwxfHNlYXJjaHwxfHxBbGdhcnZlJTIwYmVhY2glMjBQb3J0dWdhbHxlbnwxfDB8fHwxNzgxNjA5NDQ3fDA&ixlib=rb-4.1.0&w=1080&q=80&fm=jpg&fit=crop"
+  },
+  {
+    "code": "PMI",
+    "name": "Palma",
+    "country": "Spain",
+    "countryCode": "ES",
+    "basePrice": 75,
+    "imageURL": "https://images.unsplash.com/photo-1631150924300-f6144161ac21?ixid=M3w5Nzg1NjR8MHwxfHNlYXJjaHwxfHxNYWxsb3JjYSUyMGJlYWNofGVufDF8MHx8fDE3ODE2MDk0NDd8MA&ixlib=rb-4.1.0&w=1080&q=80&fm=jpg&fit=crop"
+  },
+  {
+    "code": "BIO",
+    "name": "Bilbao",
+    "country": "Spain",
+    "countryCode": "ES",
+    "basePrice": 65,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Collage_de_Bilbao%2C_Pa%C3%ADs_Vasco%2C_Espa%C3%B1a.png?width=1024"
+  },
+  {
+    "code": "AGP",
+    "name": "Malaga",
+    "country": "Spain",
+    "countryCode": "ES",
+    "basePrice": 72,
+    "imageURL": "https://images.unsplash.com/photo-1709229001947-23eef33c12a5?ixid=M3w5Nzg1NjR8MHwxfHNlYXJjaHwxfHxNYWxhZ2ElMjBiZWFjaHxlbnwxfDB8fHwxNzgxNjA5NDQ4fDA&ixlib=rb-4.1.0&w=1080&q=80&fm=jpg&fit=crop"
+  },
+  {
+    "code": "ATH",
+    "name": "Athens",
+    "country": "Greece",
+    "countryCode": "GR",
+    "basePrice": 96,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Monastiraki_Square_and_Acropolis_in_Athens_%2844149181684%29.jpg?width=1024"
+  },
+  {
+    "code": "KEF",
+    "name": "Reykjavik",
+    "country": "Iceland",
+    "countryCode": "IS",
+    "basePrice": 112,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Reykjav%C3%ADk%2C_view_from_Hallgr%C3%ADmskirkja_%282%29.jpg?width=1024"
+  },
+  {
+    "code": "STO",
+    "name": "Stockholm",
+    "country": "Sweden",
+    "countryCode": "SE",
+    "basePrice": 88,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Royal_Dramatic_Theatre_Stockholm.jpg?width=1024"
+  },
+  {
+    "code": "OSL",
+    "name": "Oslo",
+    "country": "Norway",
+    "countryCode": "NO",
+    "basePrice": 92,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Nationaltheatret_evening.jpg?width=1024"
+  },
+  {
+    "code": "HEL",
+    "name": "Helsinki",
+    "country": "Finland",
+    "countryCode": "FI",
+    "basePrice": 99,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Suomenlinna_%28cropped%29.jpg?width=1024"
+  },
+  {
+    "code": "ZRH",
+    "name": "Zurich",
+    "country": "Switzerland",
+    "countryCode": "CH",
+    "basePrice": 80,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Altstadt_Z%C3%BCrich_2015.jpg?width=1024"
+  },
+  {
+    "code": "DBV",
+    "name": "Dubrovnik",
+    "country": "Croatia",
+    "countryCode": "HR",
+    "basePrice": 90,
+    "imageURL": "https://images.unsplash.com/photo-1505063080835-c595bc339ddf?ixid=M3w5Nzg1NjR8MHwxfHNlYXJjaHwxfHxEdWJyb3ZuaWslMjBiZWFjaHxlbnwxfDB8fHwxNzgxNjA5NDQ5fDA&ixlib=rb-4.1.0&w=1080&q=80&fm=jpg&fit=crop"
+  },
+  {
+    "code": "SPU",
+    "name": "Split",
+    "country": "Croatia",
+    "countryCode": "HR",
+    "basePrice": 85,
+    "imageURL": "https://images.unsplash.com/photo-1570135430923-39edc22a2ffa?ixid=M3w5Nzg1NjR8MHwxfHNlYXJjaHwxfHxTcGxpdCUyMENyb2F0aWElMjBiZWFjaHxlbnwxfDB8fHwxNzgxNjA5NDUwfDA&ixlib=rb-4.1.0&w=1080&q=80&fm=jpg&fit=crop"
+  },
+  {
+    "code": "TFS",
+    "name": "Tenerife",
+    "country": "Spain",
+    "countryCode": "ES",
+    "basePrice": 95,
+    "imageURL": "https://images.unsplash.com/photo-1605182054023-17d71f44aa11?ixid=M3w5Nzg1NjR8MHwxfHNlYXJjaHwxfHxUZW5lcmlmZSUyMGJlYWNofGVufDF8MHx8fDE3ODE2MDk0NTF8MA&ixlib=rb-4.1.0&w=1080&q=80&fm=jpg&fit=crop"
+  },
+  {
+    "code": "NAP",
+    "name": "Naples",
+    "country": "Italy",
+    "countryCode": "IT",
+    "basePrice": 77,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Napoli_-_Maschio_Angioino_-_202209302342_3.jpg?width=1024"
+  },
+  {
+    "code": "GDN",
+    "name": "Gdansk",
+    "country": "Poland",
+    "countryCode": "PL",
+    "basePrice": 52,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Calle_Dlugie_Pobrzeze%2C_Gdansk%2C_Polonia%2C_2013-05-20%2C_DD_06.jpg?width=1024"
+  },
+  {
+    "code": "ALC",
+    "name": "Alicante",
+    "country": "Spain",
+    "countryCode": "ES",
+    "basePrice": 58,
+    "imageURL": "https://images.unsplash.com/photo-1680537732160-01750bae5217?ixid=M3w5Nzg1NjR8MHwxfHNlYXJjaHwxfHxBbGljYW50ZSUyMGJlYWNofGVufDF8MHx8fDE3ODE2MDk0NTJ8MA&ixlib=rb-4.1.0&w=1080&q=80&fm=jpg&fit=crop"
+  },
+  {
+    "code": "VLC",
+    "name": "Valencia",
+    "country": "Spain",
+    "countryCode": "ES",
+    "basePrice": 60,
+    "imageURL": "https://images.unsplash.com/photo-1736685103486-0e70de4963ca?ixid=M3w5Nzg1NjR8MHwxfHNlYXJjaHwxfHxWYWxlbmNpYSUyMGJlYWNofGVufDF8MHx8fDE3ODE2MDk0NTJ8MA&ixlib=rb-4.1.0&w=1080&q=80&fm=jpg&fit=crop"
+  },
+  {
+    "code": "SVQ",
+    "name": "Seville",
+    "country": "Spain",
+    "countryCode": "ES",
+    "basePrice": 66,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Sevilla_Cathedral_-_Southeast.jpg?width=1024"
+  },
+  {
+    "code": "MAH",
+    "name": "Menorca",
+    "country": "Spain",
+    "countryCode": "ES",
+    "basePrice": 74,
+    "imageURL": "https://images.unsplash.com/photo-1598960635501-373fc199bf18?ixid=M3w5Nzg1NjR8MHwxfHNlYXJjaHwxfHxNZW5vcmNhJTIwYmVhY2h8ZW58MXwwfHx8MTc4MTYwOTQ1M3ww&ixlib=rb-4.1.0&w=1080&q=80&fm=jpg&fit=crop"
+  },
+  {
+    "code": "IBZ",
+    "name": "Ibiza",
+    "country": "Spain",
+    "countryCode": "ES",
+    "basePrice": 82,
+    "imageURL": "https://images.unsplash.com/photo-1596377940590-9ac8e3d22b79?ixid=M3w5Nzg1NjR8MHwxfHNlYXJjaHwxfHxJYml6YSUyMGJlYWNofGVufDF8MHx8fDE3ODE2MDk0NTR8MA&ixlib=rb-4.1.0&w=1080&q=80&fm=jpg&fit=crop"
+  },
+  {
+    "code": "LPA",
+    "name": "Gran Canaria",
+    "country": "Spain",
+    "countryCode": "ES",
+    "basePrice": 99,
+    "imageURL": "https://images.unsplash.com/photo-1581886038633-4c46f67b0e3d?ixid=M3w5Nzg1NjR8MHwxfHNlYXJjaHwxfHxHcmFuJTIwQ2FuYXJpYSUyMGJlYWNofGVufDF8MHx8fDE3ODE2MDk0NTV8MA&ixlib=rb-4.1.0&w=1080&q=80&fm=jpg&fit=crop"
+  },
+  {
+    "code": "ACE",
+    "name": "Lanzarote",
+    "country": "Spain",
+    "countryCode": "ES",
+    "basePrice": 96,
+    "imageURL": "https://images.unsplash.com/photo-1682293910437-54139b614b3a?ixid=M3w5Nzg1NjR8MHwxfHNlYXJjaHwxfHxMYW56YXJvdGUlMjBiZWFjaHxlbnwxfDB8fHwxNzgxNjA5NDU2fDA&ixlib=rb-4.1.0&w=1080&q=80&fm=jpg&fit=crop"
+  },
+  {
+    "code": "GRO",
+    "name": "Girona",
+    "country": "Spain",
+    "countryCode": "ES",
+    "basePrice": 55,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Girona_des_de_l_aire_edited.jpg?width=1024"
+  },
+  {
+    "code": "PSA",
+    "name": "Pisa",
+    "country": "Italy",
+    "countryCode": "IT",
+    "basePrice": 59,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Italy_-_Pisa.jpg?width=1024"
+  },
+  {
+    "code": "BLQ",
+    "name": "Bologna",
+    "country": "Italy",
+    "countryCode": "IT",
+    "basePrice": 62,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Torri_di_Bologna%2C_Bologna.jpg?width=1024"
+  },
+  {
+    "code": "CTA",
+    "name": "Catania",
+    "country": "Italy",
+    "countryCode": "IT",
+    "basePrice": 85,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Catania_vista_dall%27alto_e_il_vulcano_Etna_a_sovrastarla.jpg?width=1024"
+  },
+  {
+    "code": "FLR",
+    "name": "Florence",
+    "country": "Italy",
+    "countryCode": "IT",
+    "basePrice": 74,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/FirenzeDec092023_01.jpg?width=1024"
+  },
+  {
+    "code": "BRI",
+    "name": "Bari",
+    "country": "Italy",
+    "countryCode": "IT",
+    "basePrice": 72,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Bari_-_Lungomare_Imperatore_Augusto_%26_Mare.jpg?width=1024"
+  },
+  {
+    "code": "LYS",
+    "name": "Lyon",
+    "country": "France",
+    "countryCode": "FR",
+    "basePrice": 66,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Lyon-part-dieu-2023.jpg?width=1024"
+  },
+  {
+    "code": "MRS",
+    "name": "Marseille",
+    "country": "France",
+    "countryCode": "FR",
+    "basePrice": 70,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Notre-Dame_de_la_Garde_aerial_view_2020.jpeg?width=1024"
+  },
+  {
+    "code": "TLS",
+    "name": "Toulouse",
+    "country": "France",
+    "countryCode": "FR",
+    "basePrice": 68,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Toulouse_-_vue_du_Vieux_Toulouse_depuis_St_Sernin_06.jpg?width=1024"
+  },
+  {
+    "code": "HAM",
+    "name": "Hamburg",
+    "country": "Germany",
+    "countryCode": "DE",
+    "basePrice": 65,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Hamburg%2C_Landungsbr%C3%BCcken_--_2016_--_3131-7.jpg?width=1024"
+  },
+  {
+    "code": "CGN",
+    "name": "Cologne",
+    "country": "Germany",
+    "countryCode": "DE",
+    "basePrice": 60,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Kranh%C3%A4user_Cologne%2C_April_2018_-01.jpg?width=1024"
+  },
+  {
+    "code": "FRA",
+    "name": "Frankfurt",
+    "country": "Germany",
+    "countryCode": "DE",
+    "basePrice": 68,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Frankfurt_Main_August_2020_1.jpg?width=1024"
+  },
+  {
+    "code": "WAW",
+    "name": "Warsaw",
+    "country": "Poland",
+    "countryCode": "PL",
+    "basePrice": 55,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Aleja_Niepdleglosci_Warsaw_2022_aerial_%28cropped%29.jpg?width=1024"
+  },
+  {
+    "code": "WRO",
+    "name": "Wroclaw",
+    "country": "Poland",
+    "countryCode": "PL",
+    "basePrice": 52,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Wroclaw-_Most_Grunwaldzki.jpg?width=1024"
+  },
+  {
+    "code": "BSL",
+    "name": "Basel",
+    "country": "Switzerland",
+    "countryCode": "CH",
+    "basePrice": 72,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Basel_-_M%C3%BCnsterpfalz1.jpg?width=1024"
+  },
+  {
+    "code": "SZG",
+    "name": "Salzburg",
+    "country": "Austria",
+    "countryCode": "AT",
+    "basePrice": 80,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Salzburg_%2848489551981%29.jpg?width=1024"
+  },
+  {
+    "code": "EIN",
+    "name": "Eindhoven",
+    "country": "Netherlands",
+    "countryCode": "NL",
+    "basePrice": 56,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Lichttoren_Eindhoven_1_-_Cropped.jpg?width=1024"
+  },
+  {
+    "code": "GLA",
+    "name": "Glasgow",
+    "country": "United Kingdom",
+    "countryCode": "GB",
+    "basePrice": 55,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Glasgow_-_aerial_-_2025-04-17_14.jpg?width=1024"
+  },
+  {
+    "code": "TLL",
+    "name": "Tallinn",
+    "country": "Estonia",
+    "countryCode": "EE",
+    "basePrice": 70,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Raekoja_plats_at_night.jpg?width=1024"
+  },
+  {
+    "code": "RIX",
+    "name": "Riga",
+    "country": "Latvia",
+    "countryCode": "LV",
+    "basePrice": 66,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Riga_%2833844464828%29.jpg?width=1024"
+  },
+  {
+    "code": "VNO",
+    "name": "Vilnius",
+    "country": "Lithuania",
+    "countryCode": "LT",
+    "basePrice": 68,
+    "imageURL": "https://en.wikipedia.org/wiki/Special:FilePath/The_White_Bridge_and_%C5%A0nipi%C5%A1k%C4%97s_district_in_Vilnius_in_2023_by_Augustas_Did%C5%BEgalvis.jpg?width=1024"
+  },
+  {
+    "code": "MLA",
+    "name": "Malta",
+    "country": "Malta",
+    "countryCode": "MT",
+    "basePrice": 85,
+    "imageURL": "https://images.unsplash.com/photo-1603287208750-496eec1bd190?ixid=M3w5Nzg1NjR8MHwxfHNlYXJjaHwxfHxNYWx0YSUyMGJlYWNofGVufDF8MHx8fDE3ODE2MDk0NTd8MA&ixlib=rb-4.1.0&w=1080&q=80&fm=jpg&fit=crop"
+  },
+  {
+    "code": "SKG",
+    "name": "Thessaloniki",
+    "country": "Greece",
+    "countryCode": "GR",
+    "basePrice": 90,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Thessaloniki_Heptapyrgion_northeastern_wall_from_the_inner_yard.jpg?width=1024"
+  },
+  {
+    "code": "JTR",
+    "name": "Santorini",
+    "country": "Greece",
+    "countryCode": "GR",
+    "basePrice": 135,
+    "imageURL": "https://images.unsplash.com/photo-1600009987300-411dc2b2b0c0?ixid=M3w5Nzg1NjR8MHwxfHNlYXJjaHwxfHxTYW50b3JpbmklMjBiZWFjaHxlbnwxfDB8fHwxNzgxNjA5NDU2fDA&ixlib=rb-4.1.0&w=1080&q=80&fm=jpg&fit=crop"
+  },
+  {
+    "code": "FNC",
+    "name": "Funchal",
+    "country": "Portugal",
+    "countryCode": "PT",
+    "basePrice": 90,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Funchal%2C_Jardins_da_Quinta_Vigia_%28lookout%29.jpg?width=1024"
+  },
+  {
+    "code": "SOF",
+    "name": "Sofia",
+    "country": "Bulgaria",
+    "countryCode": "BG",
+    "basePrice": 62,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Russian_church_%2837591925970%29.jpg?width=1024"
+  },
+  {
+    "code": "IST",
+    "name": "Istanbul",
+    "country": "Turkey",
+    "countryCode": "TR",
+    "basePrice": 120,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Historical_peninsula_and_modern_skyline_of_Istanbul.jpg?width=1024"
+  },
+  {
+    "code": "RAK",
+    "name": "Marrakesh",
+    "country": "Morocco",
+    "countryCode": "MA",
+    "basePrice": 95,
+    "imageURL": "https://commons.wikimedia.org/wiki/Special:FilePath/Pavillon_Menarag%C3%A4rten.jpg?width=1024"
+  }
 ]

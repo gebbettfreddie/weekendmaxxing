@@ -9,7 +9,7 @@ struct DestinationCard: View {
             DestinationBanner(
                 code: destination.city.code,
                 flagEmoji: destination.flagEmoji,
-                imageURL: destination.city.imageURL,
+                imageURL: destination.city.photoURL,
                 height: 132
             )
             .overlay(alignment: .topTrailing) {
