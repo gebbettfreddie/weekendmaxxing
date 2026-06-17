@@ -50,32 +50,22 @@ struct SerpApiTripService: TripService {
         ]
 
         let response: SerpFlightsResponse = try await get(path: "v1/offers", queryItems: items)
-        let flights = (response.bestFlights ?? []) + (response.otherFlights ?? [])
-        if flights.isEmpty { throw TripServiceError.noResults }
+        let outboundFlights = (response.bestFlights ?? []) + (response.otherFlights ?? [])
+        if outboundFlights.isEmpty { throw TripServiceError.noResults }
 
         let city = catalog.cityOrPlaceholder(forCode: destination)
-        let offers: [TripOffer] = flights.enumerated().compactMap { index, flight in
+
+        // Build the outbound-only offers first; the round-trip total price comes
+        // back on this first call. Each offer keeps the `departure_token` it was
+        // built from so we can fetch its matching return legs below.
+        let pending: [(token: String?, offer: TripOffer)] = outboundFlights.enumerated().compactMap { index, flight in
             guard let amount = flight.price, let firstLeg = flight.flights.first else { return nil }
 
-            let segments = flight.flights.map { leg -> FlightSegment in
-                let (code, number) = Self.splitFlightNumber(leg.flightNumber)
-                return FlightSegment(
-                    origin: leg.departureAirport.id ?? origin.uppercased(),
-                    destination: leg.arrivalAirport.id ?? destination.uppercased(),
-                    departure: Self.parseDateTime(leg.departureAirport.time),
-                    arrival: Self.parseDateTime(leg.arrivalAirport.time),
-                    carrierCode: code,
-                    carrierName: leg.airline,
-                    flightNumber: number
-                )
-            }
-
-            let duration = flight.totalDuration ?? segments.reduce(0) { $0 + $1.duration }
-            let outbound = Itinerary(segments: segments, durationMinutes: duration)
+            let outbound = Self.makeItinerary(from: flight, fallbackOrigin: origin, fallbackDestination: destination)
             let (validating, _) = Self.splitFlightNumber(firstLeg.flightNumber)
             let depKey = firstLeg.departureAirport.time ?? "\(index)"
 
-            return TripOffer(
+            let offer = TripOffer(
                 id: "\(validating)-\(destination.uppercased())-\(depKey)-\(index)",
                 price: Price(amount: amount, currency: "GBP"),
                 outbound: outbound,
@@ -83,11 +73,98 @@ struct SerpApiTripService: TripService {
                 validatingAirline: validating,
                 validatingAirlineName: firstLeg.airline,
                 destinationCity: city,
-                seatsRemaining: nil
+                seatsRemaining: nil,
+                source: .live
             )
+            return (flight.departureToken, offer)
         }
 
-        return offers.sorted { $0.price.amount < $1.price.amount }
+        // Fetch the return leg for each outbound option in bounded-concurrency
+        // batches. Per-offer failures are tolerated: if the return call fails we
+        // keep the outbound-only offer rather than dropping it.
+        var resolved: [TripOffer] = []
+        resolved.reserveCapacity(pending.count)
+
+        for batch in pending.chunked(into: 4) {
+            let batchResults: [TripOffer] = await withTaskGroup(of: TripOffer.self) { group in
+                for entry in batch {
+                    group.addTask {
+                        await self.withInbound(
+                            offer: entry.offer,
+                            departureToken: entry.token,
+                            baseItems: items,
+                            origin: origin,
+                            destination: destination
+                        )
+                    }
+                }
+                var collected: [TripOffer] = []
+                for await offer in group { collected.append(offer) }
+                return collected
+            }
+            resolved.append(contentsOf: batchResults)
+        }
+
+        return resolved.sorted { $0.price.amount < $1.price.amount }
+    }
+
+    /// Returns `offer` with its `inbound` populated from a second `/v1/offers`
+    /// call keyed by `departureToken`. If the token is missing or the call
+    /// fails, the original outbound-only offer is returned unchanged.
+    private func withInbound(
+        offer: TripOffer,
+        departureToken: String?,
+        baseItems: [URLQueryItem],
+        origin: String,
+        destination: String
+    ) async -> TripOffer {
+        guard let departureToken else { return offer }
+
+        let returnItems = baseItems + [URLQueryItem(name: "departure_token", value: departureToken)]
+        do {
+            let response: SerpFlightsResponse = try await get(path: "v1/offers", queryItems: returnItems)
+            let returnFlights = (response.bestFlights ?? []) + (response.otherFlights ?? [])
+            // Return options come back in the same shape; take the cheapest, or
+            // the first if no prices are reported, to mirror the outbound leg.
+            guard let returnFlight = returnFlights.min(by: {
+                ($0.price ?? .greatestFiniteMagnitude) < ($1.price ?? .greatestFiniteMagnitude)
+            }) else {
+                return offer
+            }
+            var updated = offer
+            // The return leg flies destination -> origin, so swap the fallbacks.
+            updated.inbound = Self.makeItinerary(
+                from: returnFlight,
+                fallbackOrigin: destination,
+                fallbackDestination: origin
+            )
+            return updated
+        } catch {
+            return offer
+        }
+    }
+
+    /// Builds an `Itinerary` from a SerpApi `Flight`, applying IATA fallbacks
+    /// when a leg omits airport ids.
+    private static func makeItinerary(
+        from flight: SerpFlightsResponse.Flight,
+        fallbackOrigin: String,
+        fallbackDestination: String
+    ) -> Itinerary {
+        let segments = flight.flights.map { leg -> FlightSegment in
+            let (code, number) = Self.splitFlightNumber(leg.flightNumber)
+            return FlightSegment(
+                origin: leg.departureAirport.id ?? fallbackOrigin.uppercased(),
+                destination: leg.arrivalAirport.id ?? fallbackDestination.uppercased(),
+                departure: Self.parseDateTime(leg.departureAirport.time),
+                arrival: Self.parseDateTime(leg.arrivalAirport.time),
+                carrierCode: code,
+                carrierName: leg.airline,
+                flightNumber: number
+            )
+        }
+        let duration = flight.totalDuration ?? segments.reduce(0) { $0 + $1.duration }
+        return Itinerary(segments: segments, durationMinutes: duration)
     }
 
     // MARK: - Networking
@@ -180,6 +257,11 @@ private struct SerpFlightsResponse: Decodable {
         let flights: [Leg]
         let totalDuration: Int?
         let price: Double?
+        /// Present on first-call (outbound) options; passing it back in a second
+        /// `/v1/offers` call returns the matching return legs.
+        let departureToken: String?
+        /// Present on return options; identifies a concrete bookable round-trip.
+        let bookingToken: String?
 
         struct Leg: Decodable {
             let departureAirport: Endpoint
