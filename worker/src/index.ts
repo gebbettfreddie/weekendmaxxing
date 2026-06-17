@@ -44,6 +44,7 @@ const ALLOWED_PARAMS = new Set([
   "hl",
   "gl",
   "deep_search",
+  "departure_token",
 ]);
 
 export default {
