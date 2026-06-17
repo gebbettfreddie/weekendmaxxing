@@ -51,8 +51,10 @@
 	<string>$(TRAVELPAYOUTS_TOKEN)</string>
 	<key>TravelpayoutsMarker</key>
 	<string>$(TRAVELPAYOUTS_MARKER)</string>
-	<key>SerpApiKey</key>
-	<string>$(SERPAPI_KEY)</string>
+	<key>ProxyHost</key>
+	<string>$(PROXY_HOST)</string>
+	<key>ProxyAppToken</key>
+	<string>$(PROXY_APP_TOKEN)</string>
 	<key>UseMockData</key>
 	<string>$(USE_MOCK)</string>
 </dict>

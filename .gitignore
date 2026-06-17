@@ -22,3 +22,8 @@ xcuserdata/
 
 # Secrets (copy Config/Secrets.example.xcconfig -> Config/Secrets.xcconfig)
 Config/Secrets.xcconfig
+
+# Cloudflare Worker proxy
+worker/node_modules/
+worker/.wrangler/
+worker/.dev.vars

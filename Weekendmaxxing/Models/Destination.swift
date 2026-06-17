@@ -6,6 +6,9 @@ struct Destination: Identifiable, Hashable, Codable {
     var city: City
     var price: Price
     var weekend: WeekendWindow
+    /// The route's typical/average fare, when the data source provides it (e.g.
+    /// Google's `average_price`). Used as a baseline for deal detection.
+    var typicalPrice: Double? = nil
 
     var id: String { city.code }
 }

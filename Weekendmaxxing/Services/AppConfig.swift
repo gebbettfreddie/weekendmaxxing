@@ -9,9 +9,20 @@ enum AppConfig {
     /// Optional affiliate marker used to build commissionable booking links.
     static var travelpayoutsMarker: String? { nonEmpty(infoString("TravelpayoutsMarker")) }
 
-    /// Optional SerpApi key. When present, the live Google Flights source powers
-    /// the Search / offers screen (Travelpayouts still powers discovery).
-    static var serpApiKey: String? { nonEmpty(infoString("SerpApiKey")) }
+    /// Base URL of the flight proxy (Cloudflare Worker) that fronts SerpApi with
+    /// a shared cache. When present, live Google Flights data powers discovery
+    /// and offers. The SerpApi key lives on the proxy, not in the app.
+    ///
+    /// Stored as a host (no scheme) in `Config/Secrets.xcconfig` because xcconfig
+    /// treats `//` as a comment; we prepend `https://` here.
+    static var proxyBaseURL: URL? {
+        guard let host = nonEmpty(infoString("ProxyHost")) else { return nil }
+        let raw = host.hasPrefix("http") ? host : "https://\(host)"
+        return URL(string: raw)
+    }
+
+    /// Shared token the app sends to the proxy (matches the Worker's APP_TOKEN).
+    static var proxyAppToken: String? { nonEmpty(infoString("ProxyAppToken")) }
 
     /// The `USE_MOCK` build flag (defaults to mock when unset).
     static var useMockFlag: Bool { infoBool("UseMockData", default: true) }
@@ -26,9 +37,9 @@ enum AppConfig {
         usesMockData ? "Sample data" : "Live · Travelpayouts"
     }
 
-    /// Builds the trip service for the app. Discovery uses Travelpayouts (with a
-    /// mock fallback). When a SerpApi key is present, offers use live Google
-    /// Flights (falling back to Travelpayouts, then mock).
+    /// Builds the trip service. Discovery uses Travelpayouts (with a mock
+    /// fallback). When the proxy is configured, offers use live Google Flights
+    /// (via the cached proxy), falling back to Travelpayouts then mock.
     static func makeTripService() -> TripService {
         let mock = MockTripService()
         guard !usesMockData, let token = travelpayoutsToken else {
@@ -37,10 +48,10 @@ enum AppConfig {
         let travelpayouts = TravelpayoutsTripService(token: token, marker: travelpayoutsMarker)
         let travelpayoutsWithMock = FallbackTripService(primary: travelpayouts, fallback: mock)
 
-        guard let serpKey = serpApiKey else {
+        guard let proxy = proxyBaseURL else {
             return travelpayoutsWithMock
         }
-        let serp = SerpApiTripService(apiKey: serpKey)
+        let serp = SerpApiTripService(baseURL: proxy, appToken: proxyAppToken ?? "")
         let offers = FallbackTripService(primary: serp, fallback: travelpayoutsWithMock)
         return HybridTripService(discovery: travelpayoutsWithMock, offersProvider: offers)
     }

@@ -35,6 +35,16 @@ final class PreferencesStore {
         self.hasCompletedOnboarding = defaults.bool(forKey: Key.completedOnboarding)
     }
 
+    /// Reads the persisted preferences without touching the main actor, for use
+    /// by the background match-scan task.
+    nonisolated static func current(defaults: UserDefaults = .standard) -> TravelPreferences {
+        guard let data = defaults.data(forKey: Key.preferences),
+              let decoded = try? JSONDecoder().decode(TravelPreferences.self, from: data) else {
+            return TravelPreferences()
+        }
+        return decoded
+    }
+
     /// Saves the chosen preferences and marks onboarding as complete.
     func complete(with preferences: TravelPreferences) {
         self.preferences = preferences

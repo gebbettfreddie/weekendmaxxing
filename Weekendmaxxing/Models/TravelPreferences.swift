@@ -93,5 +93,21 @@ struct TravelPreferences: Codable, Equatable {
     var tripVibe: TripVibe = .either
     var accommodationTypes: Set<AccommodationType> = [.hotel]
     var airportDistance: AirportDistance = .any
+    /// Regions the traveller wants to see; empty means anywhere in Europe.
+    var preferredRegions: Set<Region> = []
     var notificationsEnabled: Bool = false
+}
+
+extension TravelPreferences {
+    /// The budget passed to the API/services; `nil` means "any budget".
+    var maxPriceParam: Int? { maxBudget >= 500 ? nil : Int(maxBudget) }
+
+    /// Whether a destination satisfies the traveller's vibe + region filters.
+    func matches(city: City) -> Bool {
+        guard city.matches(vibe: tripVibe) else { return false }
+        guard preferredRegions.isEmpty || preferredRegions.contains(city.resolvedRegion) else {
+            return false
+        }
+        return true
+    }
 }

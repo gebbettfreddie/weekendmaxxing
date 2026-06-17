@@ -11,16 +11,18 @@ struct SavedView: View {
     let service: TripService
 
     @Environment(\.modelContext) private var modelContext
+    @Environment(AppRouter.self) private var router
     @Query(sort: \SavedTrip.savedAt, order: .reverse) private var savedTrips: [SavedTrip]
+    @State private var path: [SavedRoute] = []
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             Group {
                 if savedTrips.isEmpty {
                     EmptyStateView(
-                        systemImage: "bookmark",
-                        title: "No saved trips yet",
-                        message: "Tap the bookmark on a destination or flight to keep it here for later."
+                        systemImage: "heart",
+                        title: "No matches yet",
+                        message: "Swipe right on a destination in Match to keep it here and we'll watch its price for you."
                     )
                 } else {
                     List {
@@ -38,7 +40,7 @@ struct SavedView: View {
                 }
             }
             .background(Color(.systemGroupedBackground))
-            .navigationTitle("Saved")
+            .navigationTitle("Matches")
             .toolbar {
                 if !savedTrips.isEmpty {
                     ToolbarItem(placement: .topBarTrailing) { EditButton() }
@@ -52,6 +54,11 @@ struct SavedView: View {
                     TripDetailView(service: service, originCode: "LON", destination: destination)
                 }
             }
+        }
+        .onChange(of: router.pendingMatchDestination) { _, destination in
+            guard let destination else { return }
+            path = [.destination(destination)]
+            router.pendingMatchDestination = nil
         }
     }
 

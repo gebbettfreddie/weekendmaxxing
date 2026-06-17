@@ -1,8 +1,8 @@
 import Foundation
 
 /// Routes each capability to the source that's best at it: Travelpayouts for
-/// "cheapest anywhere" discovery, and a live source (SerpApi/Google Flights)
-/// for concrete offers on a chosen route.
+/// "cheapest anywhere" discovery, and the live proxy (Google Flights via the
+/// cached Cloudflare Worker) for concrete offers on a chosen route.
 struct HybridTripService: TripService {
     let discovery: TripService
     let offersProvider: TripService

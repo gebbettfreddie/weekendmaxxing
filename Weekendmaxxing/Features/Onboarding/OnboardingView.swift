@@ -63,11 +63,27 @@ struct OnboardingView: View {
     private var stepContent: some View {
         switch model.step {
         case .vibe: vibeStep
+        case .regions: regionsStep
         case .weekendStyle: weekendStyleStep
         case .budget: budgetStep
         case .accommodation: accommodationStep
         case .airportDistance: airportDistanceStep
         case .notifications: notificationsStep
+        }
+    }
+
+    private var regionsStep: some View {
+        VStack(spacing: 12) {
+            ForEach(Region.allCases.filter { $0 != .other }) { region in
+                OptionRow(
+                    title: region.title,
+                    systemImage: region.systemImage,
+                    isSelected: model.preferences.preferredRegions.contains(region),
+                    showsCheckmark: true
+                ) {
+                    model.toggleRegion(region)
+                }
+            }
         }
     }
 

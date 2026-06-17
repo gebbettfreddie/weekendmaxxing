@@ -9,9 +9,9 @@ struct RootView: View {
         @Bindable var router = router
 
         TabView(selection: $router.selectedTab) {
-            DiscoverView(service: tripService)
-                .tabItem { Label("Discover", systemImage: "sparkles") }
-                .tag(AppRouter.Tab.discover)
+            MatchView(service: tripService)
+                .tabItem { Label("Match", systemImage: "flame.fill") }
+                .tag(AppRouter.Tab.match)
 
             SearchView(service: tripService)
                 .tabItem { Label("Search", systemImage: "magnifyingglass") }
@@ -22,13 +22,16 @@ struct RootView: View {
                 .tag(AppRouter.Tab.alerts)
 
             SavedView(service: tripService)
-                .tabItem { Label("Saved", systemImage: "bookmark.fill") }
+                .tabItem { Label("Matches", systemImage: "heart.fill") }
                 .tag(AppRouter.Tab.saved)
         }
         .environment(router)
         .onAppear {
             NotificationManager.shared.onOpenDeal = { id in
                 router.openDeal(id: id)
+            }
+            NotificationManager.shared.onOpenMatch = { cityCode in
+                router.openMatch(cityCode: cityCode)
             }
         }
         .fullScreenCover(isPresented: .constant(!preferences.hasCompletedOnboarding)) {

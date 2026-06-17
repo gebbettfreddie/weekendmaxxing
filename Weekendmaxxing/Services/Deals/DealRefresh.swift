@@ -15,9 +15,15 @@ enum DealRefresh {
         }
     }
 
-    /// Ask iOS to run the task again later (no-op while alerts are disabled).
+    /// Whether any background notifications are wanted (deal alerts or
+    /// preference-based match alerts).
+    static var wantsBackgroundRefresh: Bool {
+        DealStore.shared.alertsEnabled || PreferencesStore.current().notificationsEnabled
+    }
+
+    /// Ask iOS to run the task again later (no-op while nothing is opted in).
     static func schedule() {
-        guard DealStore.shared.alertsEnabled else { return }
+        guard wantsBackgroundRefresh else { return }
         let request = BGAppRefreshTaskRequest(identifier: DealRules.taskIdentifier)
         request.earliestBeginDate = Date(timeIntervalSinceNow: 8 * 60 * 60)
         try? BGTaskScheduler.shared.submit(request)
@@ -31,9 +37,13 @@ enum DealRefresh {
     private static func handle(_ task: BGAppRefreshTask, service: TripService) {
         schedule() // chain the next opportunistic run
 
-        let monitor = DealMonitor(service: service)
         let work = Task {
-            await monitor.runAndNotify()
+            if DealStore.shared.alertsEnabled {
+                await DealMonitor(service: service).runAndNotify()
+            }
+            if PreferencesStore.current().notificationsEnabled {
+                await MatchMonitor(service: service).runAndNotify()
+            }
             task.setTaskCompleted(success: true)
         }
 

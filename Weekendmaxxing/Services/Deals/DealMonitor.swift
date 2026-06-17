@@ -28,7 +28,9 @@ struct DealMonitor {
             )) ?? []
 
             for destination in destinations {
-                let baseline = destination.city.basePrice
+                // Prefer the live typical fare (e.g. Google's average price);
+                // fall back to the catalog's static baseline.
+                let baseline = destination.typicalPrice ?? destination.city.basePrice
                 guard DealRules.isDeal(
                     price: destination.price.amount,
                     baseline: baseline,

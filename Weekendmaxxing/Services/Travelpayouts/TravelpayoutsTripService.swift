@@ -182,6 +182,8 @@ struct TravelpayoutsTripService: TripService {
         request.setValue(token, forHTTPHeaderField: "X-Access-Token")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
 
+        await MainActor.run { APIUsageTracker.shared.record(.travelpayouts) }
+
         let (data, response): (Data, URLResponse)
         do {
             (data, response) = try await session.data(for: request)

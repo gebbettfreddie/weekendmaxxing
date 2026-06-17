@@ -1,24 +1,26 @@
 import Foundation
 
-/// Live flight offers backed by SerpApi's Google Flights engine. Used for the
-/// Search / offers screen (where completeness matters), while discovery stays on
-/// Travelpayouts. Returns far more, fresher results than the cached Data API.
+/// Live flight data backed by Google Flights via the Weekendmaxxing proxy
+/// (a Cloudflare Worker that fronts SerpApi with a shared cache and holds the
+/// API key). Powers both discovery (`/v1/deals`) and route offers (`/v1/offers`).
 ///
-/// Note: a round-trip search returns the outbound options with the *total*
-/// round-trip price; the matching return legs require a second `departure_token`
-/// call, so v1 shows the outbound leg with the round-trip total.
+/// Note: a round-trip offers search returns the outbound options with the
+/// *total* round-trip price; matching return legs need a second token call, so
+/// v1 shows the outbound leg with the round-trip total.
 struct SerpApiTripService: TripService {
-    private let apiKey: String
-    private let baseURL = URL(string: "https://serpapi.com/search")!
+    private let baseURL: URL
+    private let appToken: String
     private let session: URLSession
     private let catalog = CityCatalog.shared
 
-    init(apiKey: String, session: URLSession = .shared) {
-        self.apiKey = apiKey
+    init(baseURL: URL, appToken: String, session: URLSession = .shared) {
+        self.baseURL = baseURL
+        self.appToken = appToken
         self.session = session
     }
 
-    // Discovery stays on Travelpayouts in the hybrid; not implemented here.
+    // Discovery stays on Travelpayouts (Google's "deals" feed returns no results
+    // for our specific weekend queries). The hybrid never calls this.
     func cheapestDestinations(
         origin: String,
         maxPrice: Int?,
@@ -27,7 +29,7 @@ struct SerpApiTripService: TripService {
         throw TripServiceError.noResults
     }
 
-    // MARK: - Offers
+    // MARK: - Offers (google_flights)
 
     func offers(
         origin: String,
@@ -36,28 +38,22 @@ struct SerpApiTripService: TripService {
         adults: Int
     ) async throws -> [TripOffer] {
         let items: [URLQueryItem] = [
-            .init(name: "engine", value: "google_flights"),
             .init(name: "departure_id", value: Self.googleID(for: origin)),
             .init(name: "arrival_id", value: Self.googleID(for: destination)),
             .init(name: "outbound_date", value: weekend.departureAPIString),
             .init(name: "return_date", value: weekend.returnAPIString),
+            .init(name: "type", value: "1"),
             .init(name: "currency", value: "GBP"),
             .init(name: "hl", value: "en"),
             .init(name: "gl", value: "uk"),
-            .init(name: "adults", value: String(max(1, adults))),
-            .init(name: "api_key", value: apiKey)
+            .init(name: "adults", value: String(max(1, adults)))
         ]
 
-        let response: SerpFlightsResponse = try await get(queryItems: items)
-        if let error = response.error, (response.bestFlights?.isEmpty ?? true), (response.otherFlights?.isEmpty ?? true) {
-            // Google simply had nothing for this query; let the fallback take over.
-            _ = error
-            throw TripServiceError.noResults
-        }
+        let response: SerpFlightsResponse = try await get(path: "v1/offers", queryItems: items)
+        let flights = (response.bestFlights ?? []) + (response.otherFlights ?? [])
+        if flights.isEmpty { throw TripServiceError.noResults }
 
         let city = catalog.cityOrPlaceholder(forCode: destination)
-        let flights = (response.bestFlights ?? []) + (response.otherFlights ?? [])
-
         let offers: [TripOffer] = flights.enumerated().compactMap { index, flight in
             guard let amount = flight.price, let firstLeg = flight.flights.first else { return nil }
 
@@ -74,11 +70,11 @@ struct SerpApiTripService: TripService {
                 )
             }
 
-            let duration = flight.totalDuration ?? segments.reduce(0) { $0 + ($1.duration) }
+            let duration = flight.totalDuration ?? segments.reduce(0) { $0 + $1.duration }
             let outbound = Itinerary(segments: segments, durationMinutes: duration)
             let (validating, _) = Self.splitFlightNumber(firstLeg.flightNumber)
-
             let depKey = firstLeg.departureAirport.time ?? "\(index)"
+
             return TripOffer(
                 id: "\(validating)-\(destination.uppercased())-\(depKey)-\(index)",
                 price: Price(amount: amount, currency: "GBP"),
@@ -87,8 +83,7 @@ struct SerpApiTripService: TripService {
                 validatingAirline: validating,
                 validatingAirlineName: firstLeg.airline,
                 destinationCity: city,
-                seatsRemaining: nil,
-                source: .live
+                seatsRemaining: nil
             )
         }
 
@@ -97,8 +92,11 @@ struct SerpApiTripService: TripService {
 
     // MARK: - Networking
 
-    private func get<T: Decodable>(queryItems: [URLQueryItem]) async throws -> T {
-        var components = URLComponents(url: baseURL, resolvingAgainstBaseURL: false)
+    private func get<T: Decodable>(path: String, queryItems: [URLQueryItem]) async throws -> T {
+        var components = URLComponents(
+            url: baseURL.appendingPathComponent(path),
+            resolvingAgainstBaseURL: false
+        )
         components?.queryItems = queryItems
         guard let url = components?.url else {
             throw TripServiceError.network("Could not build request URL")
@@ -106,6 +104,9 @@ struct SerpApiTripService: TripService {
 
         var request = URLRequest(url: url)
         request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue(appToken, forHTTPHeaderField: "X-App-Token")
+
+        await MainActor.run { APIUsageTracker.shared.record(.proxy) }
 
         let (data, response): (Data, URLResponse)
         do {
@@ -118,8 +119,7 @@ struct SerpApiTripService: TripService {
             throw TripServiceError.network("Invalid response")
         }
         guard (200..<300).contains(http.statusCode) else {
-            let message = (try? JSONDecoder().decode(SerpFlightsResponse.self, from: data))?.error
-            throw TripServiceError.server(status: http.statusCode, message: message)
+            throw TripServiceError.server(status: http.statusCode, message: nil)
         }
 
         let decoder = JSONDecoder()
@@ -133,9 +133,9 @@ struct SerpApiTripService: TripService {
 
     // MARK: - Helpers
 
-    /// Maps app IATA codes to the identifiers Google Flights accepts. Google
-    /// rejects metropolitan IATA codes (e.g. "LON"), so those map to a city
-    /// `kgmid` or a primary airport.
+    /// Maps app IATA codes to identifiers Google Flights accepts. Google rejects
+    /// metropolitan IATA codes (e.g. "LON"), so those map to a city `kgmid` or a
+    /// primary airport.
     private static let cityOverrides: [String: String] = [
         "LON": "/m/04jpl", // London (all airports)
         "PAR": "CDG",
@@ -149,7 +149,6 @@ struct SerpApiTripService: TripService {
         return cityOverrides[upper] ?? upper
     }
 
-    /// "U2 8063" -> ("U2", "8063").
     private static func splitFlightNumber(_ value: String?) -> (code: String, number: String) {
         guard let value, !value.isEmpty else { return ("", "") }
         let parts = value.split(separator: " ", maxSplits: 1)
@@ -172,11 +171,10 @@ struct SerpApiTripService: TripService {
 
 // MARK: - DTOs
 
-/// Decodes the SerpApi `google_flights` response (with `convertFromSnakeCase`).
+/// Decodes the `google_flights` response (via `convertFromSnakeCase`).
 private struct SerpFlightsResponse: Decodable {
     let bestFlights: [Flight]?
     let otherFlights: [Flight]?
-    let error: String?
 
     struct Flight: Decodable {
         let flights: [Leg]
@@ -199,6 +197,5 @@ private struct SerpFlightsResponse: Decodable {
 }
 
 private extension FlightSegment {
-    /// Minutes between departure and arrival, for summing fallback duration.
     var duration: Int { max(0, Int(arrival.timeIntervalSince(departure) / 60)) }
 }

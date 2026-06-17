@@ -8,6 +8,8 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
 
     /// Invoked (on the main actor) with a deal id when its notification is tapped.
     var onOpenDeal: ((String) -> Void)?
+    /// Invoked (on the main actor) with a city code when a match notification is tapped.
+    var onOpenMatch: ((String) -> Void)?
 
     private let center = UNUserNotificationCenter.current()
 
@@ -46,6 +48,28 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
         }
     }
 
+    /// Posts one local notification per match alert (caller caps the count).
+    func notify(matches: [MatchAlert]) async {
+        let status = await center.notificationSettings().authorizationStatus
+        guard status == .authorized || status == .provisional else { return }
+
+        for alert in matches {
+            let content = UNMutableNotificationContent()
+            content.title = alert.title
+            content.body = alert.body
+            content.sound = .default
+            content.threadIdentifier = "matches"
+            content.userInfo = ["matchCity": alert.cityCode]
+
+            let request = UNNotificationRequest(
+                identifier: alert.id,
+                content: content,
+                trigger: nil // deliver immediately
+            )
+            try? await center.add(request)
+        }
+    }
+
     // MARK: - UNUserNotificationCenterDelegate
 
     /// Show the banner even when the app is in the foreground.
@@ -60,7 +84,11 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
         _ center: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse
     ) async {
-        guard let id = response.notification.request.content.userInfo["dealID"] as? String else { return }
-        await MainActor.run { onOpenDeal?(id) }
+        let info = response.notification.request.content.userInfo
+        if let id = info["dealID"] as? String {
+            await MainActor.run { onOpenDeal?(id) }
+        } else if let cityCode = info["matchCity"] as? String {
+            await MainActor.run { onOpenMatch?(cityCode) }
+        }
     }
 }

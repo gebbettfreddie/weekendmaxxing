@@ -7,6 +7,7 @@ final class OnboardingViewModel {
     /// The ordered first-run steps.
     enum Step: Int, CaseIterable {
         case vibe
+        case regions
         case weekendStyle
         case budget
         case accommodation
@@ -16,6 +17,7 @@ final class OnboardingViewModel {
         var title: String {
             switch self {
             case .vibe: return "What are you after?"
+            case .regions: return "Where do you fancy?"
             case .weekendStyle: return "How long a weekend?"
             case .budget: return "What's your budget?"
             case .accommodation: return "Where do you like to stay?"
@@ -27,6 +29,7 @@ final class OnboardingViewModel {
         var subtitle: String {
             switch self {
             case .vibe: return "We'll lean your suggestions this way."
+            case .regions: return "Pick any regions, or none to see everywhere."
             case .weekendStyle: return "Pick the trip length that suits you."
             case .budget: return "Return flights from London per person."
             case .accommodation: return "Choose any that work for you."
@@ -90,6 +93,14 @@ final class OnboardingViewModel {
         }
     }
 
+    func toggleRegion(_ region: Region) {
+        if preferences.preferredRegions.contains(region) {
+            preferences.preferredRegions.remove(region)
+        } else {
+            preferences.preferredRegions.insert(region)
+        }
+    }
+
     /// Opt in to notifications and request system permission immediately.
     func enableNotifications() async {
         let granted = await NotificationManager.shared.requestAuthorization()
@@ -98,6 +109,11 @@ final class OnboardingViewModel {
 
     private func finish() {
         store.complete(with: preferences)
+        // Once preferences are persisted, schedule background match alerts if
+        // the traveller opted in to notifications.
+        if preferences.notificationsEnabled {
+            DealRefresh.schedule()
+        }
         onFinish()
     }
 }

@@ -25,6 +25,7 @@ struct AlertsView: View {
                     hero
                     settingsCard
                     checkButton
+                    APIUsageCard()
                     recentSection
                 }
                 .padding(.horizontal)
