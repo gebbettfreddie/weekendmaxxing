@@ -33,6 +33,9 @@ enum AccommodationType: String, Codable, CaseIterable, Identifiable {
     case hotel
     case apartment
     case bnb
+    /// "No preference" — any kind of stay works. Mutually exclusive with the
+    /// specific types above.
+    case anywhere
 
     var id: String { rawValue }
 
@@ -42,6 +45,7 @@ enum AccommodationType: String, Codable, CaseIterable, Identifiable {
         case .hotel: return "Hotel"
         case .apartment: return "Apartment"
         case .bnb: return "B&B"
+        case .anywhere: return "Anywhere"
         }
     }
 
@@ -51,6 +55,7 @@ enum AccommodationType: String, Codable, CaseIterable, Identifiable {
         case .hotel: return "building.fill"
         case .apartment: return "house.fill"
         case .bnb: return "cup.and.saucer.fill"
+        case .anywhere: return "globe"
         }
     }
 }

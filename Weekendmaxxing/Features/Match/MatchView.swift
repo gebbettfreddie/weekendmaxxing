@@ -81,7 +81,12 @@ struct MatchView: View {
     private var headerSubtitle: String {
         switch model.state {
         case .loaded where !model.cards.isEmpty:
-            return "^[\(model.picksRemaining) pick](inflect: true) left today"
+            if model.canLike {
+                let n = model.likesRemaining
+                return "\(n) like\(n == 1 ? "" : "s") left today · swipe right to match"
+            } else {
+                return "Out of likes — resets tomorrow"
+            }
         default:
             return "Swipe right to match, left to pass"
         }
@@ -111,7 +116,13 @@ struct MatchView: View {
                 emptyState(
                     icon: "checkmark.circle.fill",
                     title: "You're all caught up",
-                    message: "That's today's three. New matches land tomorrow — we'll keep watching for anything that fits in the meantime."
+                    message: "That's today's deck. New matches land tomorrow — we'll keep watching for anything that fits in the meantime."
+                )
+            } else if model.outOfLikes {
+                emptyState(
+                    icon: "heart.slash.fill",
+                    title: "Out of likes for today",
+                    message: "You've used all \(model.dailyLikeLimit) of today's likes. Your likes reset tomorrow — come back for more matches."
                 )
             } else {
                 deck
@@ -122,27 +133,29 @@ struct MatchView: View {
 
     // MARK: - Deck
 
+    /// Fixed card height so the deck reads as a contained box rather than a
+    /// full-bleed sheet. A fixed height also lets the cards size their width
+    /// from normal layout (filling the padded width with even side margins),
+    /// which a GeometryReader's leading-aligned content did not.
+    private let cardHeight: CGFloat = 540
+
     private var deck: some View {
-        GeometryReader { geo in
-            let cardSize = CGSize(width: geo.size.width - 40, height: geo.size.height - 12)
-            ZStack {
-                ForEach(Array(model.pendingCards.prefix(3).enumerated()), id: \.element.id) { index, card in
-                    let isTop = index == 0
-                    DeckCardView(destination: card.destination, height: cardSize.height)
-                        .frame(width: cardSize.width, height: cardSize.height)
-                        .scaleEffect(isTop ? 1 : 1 - CGFloat(index) * 0.04)
-                        .offset(y: isTop ? topOffset.height : CGFloat(index) * 12)
-                        .offset(x: isTop ? topOffset.width : 0)
-                        .rotationEffect(.degrees(isTop ? Double(topOffset.width / 18) : 0))
-                        .overlay { if isTop { swipeLabels } }
-                        .zIndex(isTop ? 100 : Double(3 - index))
-                        .allowsHitTesting(isTop)
-                        .gesture(isTop ? dragGesture : nil)
-                        .onTapGesture { if isTop { route = card.destination } }
-                }
+        ZStack {
+            ForEach(Array(model.pendingCards.prefix(3).enumerated()), id: \.element.id) { index, card in
+                let isTop = index == 0
+                DeckCardView(destination: card.destination, height: cardHeight)
+                    .scaleEffect(isTop ? 1 : 1 - CGFloat(index) * 0.04)
+                    .offset(y: isTop ? topOffset.height : CGFloat(index) * 12)
+                    .offset(x: isTop ? topOffset.width : 0)
+                    .rotationEffect(.degrees(isTop ? Double(topOffset.width / 18) : 0))
+                    .overlay { if isTop { swipeLabels } }
+                    .zIndex(isTop ? 100 : Double(3 - index))
+                    .allowsHitTesting(isTop)
+                    .gesture(isTop ? dragGesture : nil)
+                    .onTapGesture { if isTop { route = card.destination } }
             }
-            .frame(width: geo.size.width, height: geo.size.height)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.horizontal, 20)
         .padding(.top, 4)
     }
@@ -269,51 +282,63 @@ struct MatchView: View {
     }
 }
 
-/// A single full-bleed destination card for the swipe deck.
+/// A single destination card for the swipe deck: an image header with the
+/// destination's vibe/region chips and price, sitting above an info box that
+/// names the location and shows the travel weekend.
 private struct DeckCardView: View {
     let destination: Destination
     var height: CGFloat
 
+    /// The image occupies the upper portion; the info box fills the remainder.
+    private var imageHeight: CGFloat { height * 0.58 }
+
     var body: some View {
-        ZStack(alignment: .bottomLeading) {
-            DestinationBanner(city: destination.city, height: height)
-
-            LinearGradient(
-                colors: [.clear, .black.opacity(0.75)],
-                startPoint: .center,
-                endPoint: .bottom
-            )
-
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(spacing: 6) {
-                    ForEach(Array(destination.city.resolvedVibes).sorted(by: { $0.rawValue < $1.rawValue }), id: \.self) { vibe in
-                        tagChip(vibe == .beach ? "Beach" : "City", systemImage: vibe == .beach ? "beach.umbrella.fill" : "building.2.fill")
+        VStack(spacing: 0) {
+            DestinationBanner(city: destination.city, height: imageHeight)
+                .overlay(alignment: .bottomLeading) {
+                    HStack(spacing: 6) {
+                        ForEach(Array(destination.city.resolvedVibes).sorted(by: { $0.rawValue < $1.rawValue }), id: \.self) { vibe in
+                            tagChip(vibe == .beach ? "Beach" : "City", systemImage: vibe == .beach ? "beach.umbrella.fill" : "building.2.fill")
+                        }
+                        tagChip(destination.city.resolvedRegion.title, systemImage: destination.city.resolvedRegion.systemImage)
                     }
-                    tagChip(destination.city.resolvedRegion.title, systemImage: destination.city.resolvedRegion.systemImage)
+                    .padding(14)
+                }
+                .overlay(alignment: .topTrailing) {
+                    PriceTag(price: destination.price, prefix: "from")
+                        .padding(14)
                 }
 
-                Text(destination.name)
-                    .font(.system(size: 34, weight: .heavy))
-                    .foregroundStyle(.white)
-
-                Label(DateUtil.weekendLabel(destination.weekend), systemImage: "calendar")
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(.white.opacity(0.92))
-
-                Text(destination.country)
-                    .font(.footnote)
-                    .foregroundStyle(.white.opacity(0.75))
-            }
-            .padding(20)
+            infoBox
         }
-        .overlay(alignment: .topTrailing) {
-            PriceTag(price: destination.price, prefix: "from")
-                .padding(14)
-        }
+        .frame(height: height)
+        .background(Color(.secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
         .shadow(color: .black.opacity(0.18), radius: 16, x: 0, y: 8)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(destination.name), \(destination.country), from \(destination.price.formattedRounded), \(DateUtil.weekendLabel(destination.weekend))")
+    }
+
+    private var infoBox: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(destination.name)
+                .font(.system(size: 30, weight: .heavy))
+                .foregroundStyle(.primary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+
+            Text(destination.country)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+
+            Spacer(minLength: 8)
+
+            Label(DateUtil.weekendLabel(destination.weekend), systemImage: "calendar")
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(.secondary)
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
     }
 
     private func tagChip(_ text: String, systemImage: String) -> some View {

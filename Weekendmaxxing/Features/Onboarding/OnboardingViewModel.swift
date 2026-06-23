@@ -88,7 +88,12 @@ final class OnboardingViewModel {
     func toggleAccommodation(_ type: AccommodationType) {
         if preferences.accommodationTypes.contains(type) {
             preferences.accommodationTypes.remove(type)
+        } else if type == .anywhere {
+            // "Anywhere" means no preference: it replaces any specific picks.
+            preferences.accommodationTypes = [.anywhere]
         } else {
+            // Choosing a specific stay clears the catch-all "Anywhere".
+            preferences.accommodationTypes.remove(.anywhere)
             preferences.accommodationTypes.insert(type)
         }
     }

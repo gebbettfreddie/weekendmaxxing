@@ -7,8 +7,13 @@ import Foundation
 final class MatchStore: @unchecked Sendable {
     static let shared = MatchStore()
 
-    /// How many destinations to surface per day.
-    static let dailyPickCount = 3
+    /// How many destinations to surface in the daily browse deck. The user can
+    /// swipe through all of them, but may only *like* `dailyLikeLimit` per day.
+    static let deckSize = 12
+    /// Likes (match / super-match) allowed per day. Passes are unlimited. This
+    /// caps how fast the matched set grows, which bounds the background
+    /// price-monitor's API load.
+    static let dailyLikeLimit = 3
     /// How long a passed destination stays hidden from the deck.
     static let passedCooldown: TimeInterval = 30 * 24 * 60 * 60
     /// Don't re-notify about the same match within this window…
@@ -23,6 +28,13 @@ final class MatchStore: @unchecked Sendable {
         static let passed = "match.passed"       // [cityCode: Date]
         static let matched = "match.matched"     // [cityCode: Destination]
         static let notified = "match.notified"   // [matchKey: NotifiedRecord]
+        static let likes = "match.likes"         // LikeState
+    }
+
+    /// Today's like tally, reset implicitly when `dayKey` rolls over.
+    private struct LikeState: Codable {
+        var dayKey: String
+        var count: Int
     }
 
     init(defaults: UserDefaults = .standard) {
@@ -64,6 +76,27 @@ final class MatchStore: @unchecked Sendable {
             passed[cityCode] = now
             defaults.set(passed, forKey: Key.passed)
         }
+    }
+
+    // MARK: - Daily like budget
+
+    /// Likes used so far today (0 once the day rolls over).
+    func likesUsedToday(now: Date = Date()) -> Int {
+        guard let state = decode(LikeState.self, Key.likes),
+              state.dayKey == Self.dayKey(for: now) else { return 0 }
+        return state.count
+    }
+
+    /// Likes still available today.
+    func likesRemainingToday(now: Date = Date()) -> Int {
+        max(0, Self.dailyLikeLimit - likesUsedToday(now: now))
+    }
+
+    /// Spends one like from today's budget. Caller is responsible for checking
+    /// `likesRemainingToday()` first.
+    func recordLike(now: Date = Date()) {
+        let key = Self.dayKey(for: now)
+        encode(LikeState(dayKey: key, count: likesUsedToday(now: now) + 1), Key.likes)
     }
 
     // MARK: - Passed cooldown
