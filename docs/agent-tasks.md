@@ -4,6 +4,81 @@ This captures the parallel-agent setup for Weekendmaxxing so it can be picked up
 later (e.g. in Claude Code). See `AGENTS.md` at the repo root for build commands,
 architecture, and the parallel-work seams.
 
+## Cursor vs Claude Code
+
+Use **both** — they bill separately and suit different jobs.
+
+| Use **Cursor** (light / cheap) | Use **Claude Code** (heavy / your Claude sub) |
+| --- | --- |
+| "What does this file do?" | Multi-file features or refactors |
+| Single-file tweaks (copy, spacing, a guard) | `SerpApiTripService`, worker proxy, `TripService` wiring |
+| Fix a linter error | Parallel work on `feat/worker-offers` + `feat/serp-client` |
+| Rename a symbol in one feature | Round-trip `departure_token` flow (current plan) |
+| Update `README` / tweak `AGENTS.md` | `xcodebuild` debug loops until green |
+| Write a commit message or PR body | Match feature, deal monitors, anything touching 5+ files |
+| Quick "where is X used?" questions | Merge branches + integration build on `main` |
+
+**Cursor = surgical. Claude Code = autonomous.**
+
+### How to run both on this repo
+
+- **Cursor window** → stay on `main` (or a small `fix/...` branch). Use **Ask** for
+  questions; use **Agent** only for tiny, scoped edits.
+- **Claude Code terminal** → `cd` into the right checkout:
+  - Heavy iOS/service work → `../weekendmaxxing-worktrees/serp-client`
+  - Worker work → `../weekendmaxxing-worktrees/worker-offers`
+  - Integration / merge → main repo root
+
+Paste the agent prompts below into Claude Code for the big tasks. Both tools read
+`AGENTS.md` for conventions.
+
+### Avoid stepping on each other
+
+1. Don't let both edit the same branch at once. Cursor on `main`; Claude Code on
+   feature branches / worktrees.
+2. Heavy work stays in worktrees (`feat/worker-offers`, `feat/serp-client`).
+3. Only one tool owns `project.yml` at a time.
+4. After Claude Code adds or renames Swift files → `xcodegen generate` in that
+   worktree. Cursor on `main` won't see new files until merge.
+
+### Cursor model tip
+
+For menial Cursor tasks, pick a faster/cheaper model in the chat dropdown. Save the
+heavier Cursor model for medium Agent-mode jobs that still aren't worth a full
+Claude Code session.
+
+### Resume checklist
+
+```bash
+# 1. Clone / pull (new machine or catch up)
+git clone https://github.com/gebbettfreddie/weekendmaxxing.git
+cd weekendmaxxing
+git pull
+
+# 2. Local secrets (gitignored — not on GitHub)
+cp Config/Secrets.example.xcconfig Config/Secrets.xcconfig   # fill in tokens
+
+# 3. Recreate worktrees (if missing)
+git fetch origin
+git worktree add ../weekendmaxxing-worktrees/worker-offers feat/worker-offers
+git worktree add ../weekendmaxxing-worktrees/serp-client   feat/serp-client
+
+# 4. Seed gitignored bits per worktree
+cp Config/Secrets.xcconfig ../weekendmaxxing-worktrees/serp-client/Config/
+cd ../weekendmaxxing-worktrees/serp-client && xcodegen generate
+cd ../weekendmaxxing-worktrees/worker-offers/worker && npm install
+# create worker/.dev.vars here (copy from main checkout)
+
+# 5. Claude Code — heavy work (paste prompts from below)
+cd ../weekendmaxxing-worktrees/worker-offers && claude   # Agent A
+# separate terminal:
+cd ../weekendmaxxing-worktrees/serp-client && claude     # Agent B
+
+# 6. Cursor — main checkout for questions + small edits
+```
+
+Check Claude usage in a Claude Code session with `/usage`.
+
 ## Setup already done
 
 - WIP committed to `main` as a checkpoint (worker proxy, Match feature, AGENTS.md).
