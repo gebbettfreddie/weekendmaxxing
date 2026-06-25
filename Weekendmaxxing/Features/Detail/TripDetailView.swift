@@ -22,7 +22,9 @@ struct TripDetailView: View {
         ScrollView {
             VStack(spacing: 20) {
                 header
+                packageSummary
                 offers
+                staysSection
             }
             .padding(.horizontal)
             .padding(.bottom, 28)
@@ -117,6 +119,71 @@ struct TripDetailView: View {
         }
     }
 
+    // MARK: - Package summary
+
+    @ViewBuilder
+    private var packageSummary: some View {
+        if let package = model.package, let stay = package.stay {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Weekend package")
+                    .font(.title3.weight(.bold))
+
+                lineItem(icon: "airplane", title: "Return flights", value: package.flight.price.formattedRounded)
+                lineItem(
+                    icon: stay.type.systemImage,
+                    title: "\(stay.nights) nights · \(stay.type.title)",
+                    value: stay.total.formattedRounded
+                )
+
+                Divider()
+
+                HStack {
+                    Text("Total for the weekend")
+                        .font(.headline)
+                    Spacer()
+                    Text(package.total.formattedRounded)
+                        .font(.title2.weight(.heavy))
+                        .foregroundStyle(Brand.coral)
+                }
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .cardStyle()
+        }
+    }
+
+    private func lineItem(icon: String, title: String, value: String) -> some View {
+        HStack {
+            Label(title, systemImage: icon)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            Spacer()
+            Text(value)
+                .font(.subheadline.weight(.semibold))
+        }
+    }
+
+    // MARK: - Stays
+
+    @ViewBuilder
+    private var staysSection: some View {
+        if !model.stays.isEmpty {
+            VStack(alignment: .leading, spacing: 14) {
+                Text("Where to stay")
+                    .font(.title3.weight(.bold))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                if let source = model.stays.first?.source, source.isApproximate {
+                    OfferSourceNote(source: source)
+                }
+
+                ForEach(model.stays) { stay in
+                    StayRow(stay: stay)
+                }
+            }
+        }
+    }
+
     // MARK: - Actions
 
     private var savedTrip: SavedTrip { SavedTrip(destination: destination) }
@@ -128,5 +195,49 @@ struct TripDetailView: View {
     private func reload() {
         loadTask?.cancel()
         loadTask = Task { await model.load() }
+    }
+}
+
+/// A single accommodation option in the "Where to stay" list.
+private struct StayRow: View {
+    let stay: StayOffer
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: stay.type.systemImage)
+                .font(.title3)
+                .foregroundStyle(Brand.coral)
+                .frame(width: 42, height: 42)
+                .background(Brand.coral.opacity(0.12), in: RoundedRectangle(cornerRadius: 11, style: .continuous))
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(stay.name)
+                    .font(.subheadline.weight(.semibold))
+                    .lineLimit(1)
+                HStack(spacing: 5) {
+                    Text(stay.type.title)
+                    if let area = stay.area { Text("· \(area)") }
+                    if let rating = stay.rating {
+                        Text("· ★ \(String(format: "%.1f", rating))")
+                    }
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+            }
+
+            Spacer(minLength: 8)
+
+            VStack(alignment: .trailing, spacing: 0) {
+                Text(stay.pricePerNight.formattedRounded)
+                    .font(.subheadline.weight(.bold))
+                Text("per night")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .cardStyle()
     }
 }

@@ -51,4 +51,27 @@ struct FallbackTripService: TripService {
             )
         }
     }
+
+    func stays(
+        city: City,
+        weekend: WeekendWindow,
+        types: Set<AccommodationType>,
+        adults: Int
+    ) async throws -> [StayOffer] {
+        do {
+            let results = try await primary.stays(
+                city: city, weekend: weekend, types: types, adults: adults
+            )
+            if results.isEmpty {
+                return try await fallback.stays(
+                    city: city, weekend: weekend, types: types, adults: adults
+                )
+            }
+            return results
+        } catch {
+            return try await fallback.stays(
+                city: city, weekend: weekend, types: types, adults: adults
+            )
+        }
+    }
 }

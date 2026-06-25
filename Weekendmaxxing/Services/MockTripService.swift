@@ -111,6 +111,80 @@ struct MockTripService: TripService {
         return offers.sorted { $0.price.amount < $1.price.amount }
     }
 
+    // MARK: - Stays
+
+    func stays(
+        city: City,
+        weekend: WeekendWindow,
+        types: Set<AccommodationType>,
+        adults: Int
+    ) async throws -> [StayOffer] {
+        try? await Task.sleep(nanoseconds: artificialDelayNanos)
+
+        let nights = max(1, weekend.nights)
+        var gen = SeededGenerator(seed: "stays-\(city.code)-\(weekend.id)")
+        // Nightly price scales loosely with the city's flight base price so
+        // pricier cities also have pricier stays.
+        let cityFactor = max(0.7, min(1.8, city.basePrice / 120))
+
+        // "Anywhere" (or no preference) means show every type.
+        let specific = types.subtracting([.anywhere])
+        let wanted = specific.isEmpty
+            ? Set(AccommodationType.allCases).subtracting([.anywhere])
+            : specific
+
+        let areas = ["Old Town", "City Centre", "Riverside", "Cathedral Quarter", "Harbourside", "Arts District"]
+
+        var offers: [StayOffer] = []
+        for type in AccommodationType.allCases where type != .anywhere && wanted.contains(type) {
+            for _ in 0..<Int.random(in: 1...2, using: &gen) {
+                let area = areas[Int.random(in: 0..<areas.count, using: &gen)]
+                let jitter = Double(Int.random(in: -8...18, using: &gen))
+                let nightly = max(14, (Self.nightlyBase(for: type) * cityFactor + jitter).rounded())
+                offers.append(
+                    StayOffer(
+                        name: Self.stayName(for: type, city: city, area: area, generator: &gen),
+                        type: type,
+                        pricePerNight: Price(amount: nightly, currency: "GBP"),
+                        nights: nights,
+                        rating: Double(Int.random(in: 38...49, using: &gen)) / 10,
+                        area: area,
+                        source: .sample,
+                        bookingURL: nil
+                    )
+                )
+            }
+        }
+        return offers.sorted { $0.total.amount < $1.total.amount }
+    }
+
+    private static func nightlyBase(for type: AccommodationType) -> Double {
+        switch type {
+        case .hostel: return 32
+        case .bnb: return 68
+        case .apartment: return 84
+        case .hotel: return 110
+        case .anywhere: return 80
+        }
+    }
+
+    private static func stayName(
+        for type: AccommodationType,
+        city: City,
+        area: String,
+        generator gen: inout SeededGenerator
+    ) -> String {
+        switch type {
+        case .hotel:
+            let options = ["\(city.name) Grand Hotel", "Hotel \(area)", "The \(city.name) Boutique"]
+            return options[Int.random(in: 0..<options.count, using: &gen)]
+        case .hostel: return "\(city.name) Backpackers"
+        case .apartment: return "\(area) Apartments"
+        case .bnb: return "The \(area) B&B"
+        case .anywhere: return "\(city.name) Stay"
+        }
+    }
+
     // MARK: - Pricing
 
     private func price(for city: City, origin: String, weekend: WeekendWindow) -> Double {

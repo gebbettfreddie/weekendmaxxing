@@ -10,7 +10,7 @@ struct RootView: View {
 
         TabView(selection: $router.selectedTab) {
             MatchView(service: tripService)
-                .tabItem { Label("Match", systemImage: "flame.fill") }
+                .tabItem { Label("Discover", systemImage: "flame.fill") }
                 .tag(AppRouter.Tab.match)
 
             SearchView(service: tripService)

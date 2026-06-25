@@ -17,9 +17,38 @@ protocol TripService: Sendable {
         weekend: WeekendWindow,
         adults: Int
     ) async throws -> [TripOffer]
+
+    /// Places to stay in `city` over `weekend`, filtered to the accommodation
+    /// `types` the traveller is happy with. Sources without an accommodation
+    /// feed return an empty array (see the default implementation).
+    func stays(
+        city: City,
+        weekend: WeekendWindow,
+        types: Set<AccommodationType>,
+        adults: Int
+    ) async throws -> [StayOffer]
 }
 
 extension TripService {
+    /// Default: no accommodation feed. Sources that support stays override this.
+    func stays(
+        city: City,
+        weekend: WeekendWindow,
+        types: Set<AccommodationType>,
+        adults: Int
+    ) async throws -> [StayOffer] { [] }
+
+    /// The single cheapest stay (by total) matching `types`, if any. Failures
+    /// are swallowed to `nil` so enrichment never breaks the surrounding flow.
+    func cheapestStay(
+        city: City,
+        weekend: WeekendWindow,
+        types: Set<AccommodationType>
+    ) async -> StayOffer? {
+        let offers = (try? await stays(city: city, weekend: weekend, types: types, adults: 1)) ?? []
+        return offers.min { $0.total.amount < $1.total.amount }
+    }
+
     /// Cheapest destinations across many weekends, keeping only the single
     /// cheapest weekend for each city. Powers the "Best price over the next N
     /// months" discovery option.

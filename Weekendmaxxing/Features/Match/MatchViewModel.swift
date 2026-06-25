@@ -25,7 +25,6 @@ final class MatchViewModel {
     private let store: MatchStore
     private let preferences: PreferencesStore
     private let origin = "LON"
-    private let monthsAhead = 3
 
     init(
         service: TripService,
@@ -47,6 +46,11 @@ final class MatchViewModel {
     var noPicks: Bool { state == .loaded && cards.isEmpty }
 
     var picksRemaining: Int { pendingCards.count }
+
+    /// The single upcoming weekend the discover deck is scoped to.
+    var comingWeekend: WeekendWindow? {
+        WeekendCalculator.upcomingWeekends(count: 1, style: preferences.preferences.weekendStyle).first
+    }
 
     /// Daily like budget, surfaced to the view.
     let dailyLikeLimit = MatchStore.dailyLikeLimit
@@ -79,7 +83,9 @@ final class MatchViewModel {
     private func generate(dayKey: String) async {
         state = .loading
         let prefs = preferences.preferences
-        let windows = WeekendCalculator.upcomingWeekends(months: monthsAhead, style: prefs.weekendStyle)
+        // Discover is scoped to the single coming weekend so the deck always
+        // headlines the nearest escape rather than fares spread months out.
+        let windows = WeekendCalculator.upcomingWeekends(count: 1, style: prefs.weekendStyle)
         do {
             let results = try await service.cheapestDestinations(
                 origin: origin,
@@ -87,17 +93,49 @@ final class MatchViewModel {
                 weekends: windows
             )
             let excluded = store.matchedCityCodes().union(store.cooldownCityCodes())
-            let picks = results
-                .filter { prefs.matches(city: $0.city) }
-                .filter { !excluded.contains($0.city.code) }
-                .prefix(MatchStore.deckSize)
-            let deck = picks.map { DeckCard(destination: $0, swipe: nil) }
+            let picks = Array(
+                results
+                    .filter { prefs.matches(city: $0.city) }
+                    .filter { !excluded.contains($0.city.code) }
+                    .prefix(MatchStore.deckSize)
+            )
+            // Enrich each pick with its cheapest stay so the card can headline a
+            // complete package price (flights + stay).
+            let enriched = await enrichWithStays(picks, types: prefs.accommodationTypes)
+            let deck = enriched.map { DeckCard(destination: $0, swipe: nil) }
             store.saveDeck(deck, dayKey: dayKey)
             cards = deck
             state = .loaded
         } catch {
             state = .error((error as? LocalizedError)?.errorDescription ?? error.localizedDescription)
         }
+    }
+
+    /// Fetches the cheapest stay for each destination (bounded concurrency) and
+    /// folds its total into `Destination.stayFrom`. Per-card failures leave that
+    /// destination as flights-only — `cheapestStay` already swallows errors.
+    private func enrichWithStays(
+        _ destinations: [Destination],
+        types: Set<AccommodationType>
+    ) async -> [Destination] {
+        let service = self.service
+        var result = destinations
+        for batch in Array(destinations.enumerated()).chunked(into: 4) {
+            await withTaskGroup(of: (Int, Price?).self) { group in
+                for (index, destination) in batch {
+                    group.addTask {
+                        let stay = await service.cheapestStay(
+                            city: destination.city,
+                            weekend: destination.weekend,
+                            types: types
+                        )
+                        return (index, stay?.total)
+                    }
+                }
+                for await (index, total) in group { result[index].stayFrom = total }
+            }
+        }
+        return result
     }
 
     /// Records a swipe on the top card and persists it. Returns the swiped card

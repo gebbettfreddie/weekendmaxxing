@@ -25,4 +25,15 @@ struct HybridTripService: TripService {
             origin: origin, destination: destination, weekend: weekend, adults: adults
         )
     }
+
+    // Stays are route/destination-specific, like offers, so they take the same
+    // live path (proxy → SerpApi google_hotels, with mock fallback).
+    func stays(
+        city: City,
+        weekend: WeekendWindow,
+        types: Set<AccommodationType>,
+        adults: Int
+    ) async throws -> [StayOffer] {
+        try await offersProvider.stays(city: city, weekend: weekend, types: types, adults: adults)
+    }
 }

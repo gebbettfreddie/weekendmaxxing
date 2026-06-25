@@ -9,6 +9,7 @@
  * Endpoints (params mirror SerpApi, minus api_key):
  *   GET /v1/deals   -> engine=google_flights_deals  (discovery)   TTL 24h
  *   GET /v1/offers  -> engine=google_flights        (route offers) TTL 3h
+ *   GET /v1/stays   -> engine=google_hotels         (accommodation) TTL 6h
  * All requests must send header `X-App-Token: <APP_TOKEN>`.
  */
 
@@ -26,6 +27,7 @@ interface RouteConfig {
 const ROUTES: Record<string, RouteConfig> = {
   "/v1/deals": { engine: "google_flights_deals", ttl: 24 * 60 * 60 },
   "/v1/offers": { engine: "google_flights", ttl: 3 * 60 * 60 },
+  "/v1/stays": { engine: "google_hotels", ttl: 6 * 60 * 60 },
 };
 
 // Only these params are forwarded to SerpApi (api_key is added server-side).
@@ -45,6 +47,17 @@ const ALLOWED_PARAMS = new Set([
   "gl",
   "deep_search",
   "departure_token",
+  // google_hotels (/v1/stays)
+  "q",
+  "check_in_date",
+  "check_out_date",
+  "sort_by",
+  "min_price",
+  "rating",
+  "hotel_class",
+  "property_types",
+  "vacation_rentals",
+  "next_page_token",
 ]);
 
 export default {

@@ -17,7 +17,6 @@ struct MatchView: View {
     private let service: TripService
 
     private let swipeThreshold: CGFloat = 110
-    private let superThreshold: CGFloat = 150
 
     init(service: TripService) {
         self.service = service
@@ -67,7 +66,7 @@ struct MatchView: View {
     private var header: some View {
         HStack(alignment: .center) {
             VStack(alignment: .leading, spacing: 2) {
-                Text("Today's matches")
+                Text("Discover")
                     .font(.largeTitle.weight(.bold))
                 Text(headerSubtitle)
                     .font(.subheadline)
@@ -93,17 +92,10 @@ struct MatchView: View {
     }
 
     private var headerSubtitle: String {
-        switch model.state {
-        case .loaded where !model.cards.isEmpty:
-            if model.canLike {
-                let n = model.likesRemaining
-                return "\(n) like\(n == 1 ? "" : "s") left today · swipe right to match"
-            } else {
-                return "Out of likes — resets tomorrow"
-            }
-        default:
-            return "Swipe right to match, left to pass"
+        if let weekend = model.comingWeekend {
+            return "\(DateUtil.weekendLabel(weekend)) · cheapest escapes from London"
         }
+        return "Swipe right to match, left to pass"
     }
 
     // MARK: - Content
@@ -184,10 +176,6 @@ struct MatchView: View {
                 .opacity(Double(max(0, -topOffset.width) / swipeThreshold))
                 .rotationEffect(.degrees(14))
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
-            stampLabel("SUPER", color: .blue)
-                .opacity(Double(max(0, -topOffset.height) / superThreshold))
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-                .padding(.top, 40)
         }
         .padding(24)
     }
@@ -209,7 +197,6 @@ struct MatchView: View {
     private var actionButtons: some View {
         HStack(spacing: 28) {
             circleButton(icon: "xmark", tint: .red) { commitSwipe(.pass) }
-            circleButton(icon: "star.fill", tint: .blue, size: 52) { commitSwipe(.superMatch) }
             circleButton(icon: "heart.fill", tint: Brand.coral) { commitSwipe(.match) }
         }
         .padding(.top, 14)
@@ -258,9 +245,7 @@ struct MatchView: View {
             }
             .onEnded { value in
                 let t = value.translation
-                if t.height < -superThreshold && abs(t.width) < swipeThreshold {
-                    commitSwipe(.superMatch)
-                } else if t.width > swipeThreshold {
+                if t.width > swipeThreshold {
                     commitSwipe(.match)
                 } else if t.width < -swipeThreshold {
                     commitSwipe(.pass)
@@ -298,9 +283,8 @@ struct MatchView: View {
 }
 
 /// A single destination card for the swipe deck: an image header with the
-/// destination's vibe/region chips, sitting above an info box that names the
-/// location and shows the travel weekend. The fare is intentionally hidden here
-/// and only revealed in the match celebration once the traveller likes the trip.
+/// destination's vibe/region chips and fare, sitting above an info box that
+/// names the location and shows the travel weekend.
 private struct DeckCardView: View {
     let destination: Destination
     var height: CGFloat
@@ -320,6 +304,20 @@ private struct DeckCardView: View {
                     }
                     .padding(14)
                 }
+                .overlay(alignment: .topTrailing) {
+                    VStack(alignment: .trailing, spacing: 5) {
+                        PriceTag(price: destination.packageFrom ?? destination.price, prefix: "from")
+                        if destination.packageFrom != nil {
+                            Text("flights + stay")
+                                .font(.caption2.weight(.bold))
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 3)
+                                .background(Capsule().fill(Brand.coral))
+                        }
+                    }
+                    .padding(14)
+                }
 
             infoBox
         }
@@ -328,7 +326,7 @@ private struct DeckCardView: View {
         .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
         .shadow(color: .black.opacity(0.18), radius: 16, x: 0, y: 8)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(destination.name), \(destination.country), \(DateUtil.weekendLabel(destination.weekend))")
+        .accessibilityLabel("\(destination.name), \(destination.country), from \(destination.price.formattedRounded), \(DateUtil.weekendLabel(destination.weekend))")
     }
 
     private var infoBox: some View {
@@ -419,10 +417,16 @@ private struct MatchCelebrationView: View {
                     Text(destination.country)
                         .font(.headline)
                         .foregroundStyle(.white.opacity(0.85))
-                    Text("\(DateUtil.weekendLabel(destination.weekend)) · from \(destination.price.formattedRounded)")
-                        .font(.title3.weight(.bold))
+                    Text(DateUtil.weekendLabel(destination.weekend))
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(.white.opacity(0.85))
+                        .padding(.top, 8)
+                    Text("from \((destination.packageFrom ?? destination.price).formattedRounded)")
+                        .font(.system(size: 30, weight: .heavy))
                         .foregroundStyle(.white)
-                        .padding(.top, 10)
+                    Text(destination.packageFrom != nil ? "flights + stay" : "return flights")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.white.opacity(0.8))
                 }
 
                 Spacer(minLength: 0)

@@ -14,6 +14,7 @@ Params mirror SerpApi (minus `api_key`). Every request needs `X-App-Token`.
 | --- | --- | --- |
 | `GET /v1/deals` | `google_flights_deals` (discovery) | 24h |
 | `GET /v1/offers` | `google_flights` (route offers; pass `departure_token` for the return leg of a round trip) | 3h |
+| `GET /v1/stays` | `google_hotels` (accommodation; `q`, `check_in_date`, `check_out_date`, `adults`) | 6h |
 
 Round-trip offers are a two-step flow: the first `/v1/offers` call returns
 outbound flights, each carrying a `departure_token`. Repeat the call with that
@@ -33,6 +34,10 @@ curl -H "X-App-Token: $APP_TOKEN" \
 # Step 2: return legs for a chosen outbound (add departure_token from step 1)
 curl -H "X-App-Token: $APP_TOKEN" \
   "https://<your-worker>/v1/offers?departure_id=LON&arrival_id=BCN&outbound_date=2026-06-19&return_date=2026-06-21&type=1&currency=GBP&hl=en&gl=uk&departure_token=<token>"
+
+# Stays for the same weekend (sorted cheapest first)
+curl -H "X-App-Token: $APP_TOKEN" \
+  "https://<your-worker>/v1/stays?q=Barcelona%20Spain&check_in_date=2026-06-19&check_out_date=2026-06-21&adults=1&currency=GBP&hl=en&gl=uk&sort_by=3"
 ```
 
 Responses include an `X-Cache: HIT|MISS` header.

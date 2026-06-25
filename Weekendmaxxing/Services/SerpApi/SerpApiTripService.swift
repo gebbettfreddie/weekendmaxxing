@@ -167,6 +167,64 @@ struct SerpApiTripService: TripService {
         return Itinerary(segments: segments, durationMinutes: duration)
     }
 
+    // MARK: - Stays (google_hotels)
+
+    func stays(
+        city: City,
+        weekend: WeekendWindow,
+        types: Set<AccommodationType>,
+        adults: Int
+    ) async throws -> [StayOffer] {
+        let items: [URLQueryItem] = [
+            .init(name: "q", value: "\(city.name) \(city.country)"),
+            .init(name: "check_in_date", value: weekend.departureAPIString),
+            .init(name: "check_out_date", value: weekend.returnAPIString),
+            .init(name: "adults", value: String(max(1, adults))),
+            .init(name: "currency", value: "GBP"),
+            .init(name: "hl", value: "en"),
+            .init(name: "gl", value: "uk"),
+            .init(name: "sort_by", value: "3") // 3 = lowest price
+        ]
+
+        let response: SerpHotelsResponse = try await get(path: "v1/stays", queryItems: items)
+        let nights = max(1, weekend.nights)
+
+        let all: [StayOffer] = (response.properties ?? []).compactMap { property in
+            // Prefer the nightly rate; fall back to dividing the stay total.
+            let nightly = property.ratePerNight?.extractedLowest
+                ?? property.totalRate?.extractedLowest.map { $0 / Double(nights) }
+            guard let nightly else { return nil }
+            return StayOffer(
+                name: property.name ?? "\(city.name) stay",
+                type: Self.accommodationType(from: property.type),
+                pricePerNight: Price(amount: nightly.rounded(), currency: "GBP"),
+                nights: nights,
+                rating: property.overallRating,
+                area: nil,
+                source: .live,
+                bookingURL: property.link.flatMap { URL(string: $0) }
+            )
+        }
+        if all.isEmpty { throw TripServiceError.noResults }
+
+        // Honour the traveller's accommodation preferences when any match;
+        // otherwise return all so a stay is still surfaced.
+        let specific = types.subtracting([.anywhere])
+        let filtered = specific.isEmpty ? all : all.filter { specific.contains($0.type) }
+        let result = filtered.isEmpty ? all : filtered
+        return result.sorted { $0.total.amount < $1.total.amount }
+    }
+
+    /// Maps a SerpApi `google_hotels` property `type` string to our enum.
+    private static func accommodationType(from type: String?) -> AccommodationType {
+        let value = (type ?? "").lowercased()
+        if value.contains("hostel") { return .hostel }
+        if value.contains("apartment") || value.contains("rental") { return .apartment }
+        if value.contains("breakfast") || value.contains("b&b")
+            || value.contains("inn") || value.contains("guest") { return .bnb }
+        return .hotel
+    }
+
     // MARK: - Networking
 
     private func get<T: Decodable>(path: String, queryItems: [URLQueryItem]) async throws -> T {
@@ -280,4 +338,23 @@ private struct SerpFlightsResponse: Decodable {
 
 private extension FlightSegment {
     var duration: Int { max(0, Int(arrival.timeIntervalSince(departure) / 60)) }
+}
+
+/// Decodes the `google_hotels` response (via `convertFromSnakeCase`).
+private struct SerpHotelsResponse: Decodable {
+    let properties: [Property]?
+
+    struct Property: Decodable {
+        let name: String?
+        let type: String?
+        let ratePerNight: Rate?
+        let totalRate: Rate?
+        /// Guest rating out of 5.
+        let overallRating: Double?
+        let link: String?
+
+        struct Rate: Decodable {
+            let extractedLowest: Double?
+        }
+    }
 }
