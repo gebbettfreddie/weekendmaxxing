@@ -7,6 +7,8 @@ struct MatchView: View {
     @State private var model: MatchViewModel
     @State private var topOffset: CGSize = .zero
     @State private var route: Destination?
+    /// Set after a successful like to present the "It's a match!" celebration.
+    @State private var celebration: Destination?
     @State private var loadTask: Task<Void, Never>?
     @State private var showLogOutConfirm = false
 
@@ -34,6 +36,16 @@ struct MatchView: View {
             .navigationDestination(item: $route) { destination in
                 TripDetailView(service: service, originCode: "LON", destination: destination)
             }
+            .fullScreenCover(item: $celebration) { destination in
+                MatchCelebrationView(
+                    destination: destination,
+                    onViewTrip: {
+                        celebration = nil
+                        route = destination
+                    },
+                    onDismiss: { celebration = nil }
+                )
+            }
             .confirmationDialog("Log out?", isPresented: $showLogOutConfirm, titleVisibility: .visible) {
                 Button("Log out", role: .destructive) {
                     PreferencesStore.shared.logOut()
@@ -44,6 +56,8 @@ struct MatchView: View {
             }
             .task {
                 if case .idle = model.state { await model.load() }
+                if UITestHooks.celebrateOnLaunch { celebration = model.topCard?.destination }
+                if UITestHooks.routeTopCardOnLaunch { route = model.topCard?.destination }
             }
         }
     }
@@ -263,6 +277,7 @@ struct MatchView: View {
             try? await Task.sleep(nanoseconds: 290_000_000)
             if let card = model.swipe(direction), direction != .pass {
                 SavedTripsStore.save(SavedTrip(destination: card.destination), context: modelContext)
+                celebration = card.destination
             }
             topOffset = .zero
         }
@@ -283,8 +298,9 @@ struct MatchView: View {
 }
 
 /// A single destination card for the swipe deck: an image header with the
-/// destination's vibe/region chips and price, sitting above an info box that
-/// names the location and shows the travel weekend.
+/// destination's vibe/region chips, sitting above an info box that names the
+/// location and shows the travel weekend. The fare is intentionally hidden here
+/// and only revealed in the match celebration once the traveller likes the trip.
 private struct DeckCardView: View {
     let destination: Destination
     var height: CGFloat
@@ -304,10 +320,6 @@ private struct DeckCardView: View {
                     }
                     .padding(14)
                 }
-                .overlay(alignment: .topTrailing) {
-                    PriceTag(price: destination.price, prefix: "from")
-                        .padding(14)
-                }
 
             infoBox
         }
@@ -316,7 +328,7 @@ private struct DeckCardView: View {
         .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
         .shadow(color: .black.opacity(0.18), radius: 16, x: 0, y: 8)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(destination.name), \(destination.country), from \(destination.price.formattedRounded), \(DateUtil.weekendLabel(destination.weekend))")
+        .accessibilityLabel("\(destination.name), \(destination.country), \(DateUtil.weekendLabel(destination.weekend))")
     }
 
     private var infoBox: some View {
@@ -353,5 +365,98 @@ private struct DeckCardView: View {
         .padding(.vertical, 5)
         .background(Capsule().fill(.ultraThinMaterial))
         .environment(\.colorScheme, .dark)
+    }
+}
+
+/// The Tinder-style "It's a match!" celebration shown after a like. This is the
+/// first place the fare is revealed: the deck cards deliberately hide price, so
+/// the reveal here lands as the payoff for matching with a destination.
+private struct MatchCelebrationView: View {
+    let destination: Destination
+    var onViewTrip: () -> Void
+    var onDismiss: () -> Void
+
+    @State private var appeared = false
+
+    var body: some View {
+        ZStack {
+            LinearGradient(
+                colors: [Brand.coralDeep, Brand.coral],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
+
+            VStack(spacing: 28) {
+                Spacer(minLength: 0)
+
+                VStack(spacing: 6) {
+                    Text("It's a match!")
+                        .font(.system(size: 42, weight: .heavy))
+                        .foregroundStyle(.white)
+                    Text("Saved to your trips")
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(.white.opacity(0.85))
+                }
+
+                DestinationBanner(city: destination.city, height: 240)
+                    .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+                    .overlay(alignment: .topTrailing) {
+                        Image(systemName: "heart.fill")
+                            .font(.title2)
+                            .foregroundStyle(Brand.coral)
+                            .padding(12)
+                            .background(.white, in: Circle())
+                            .padding(14)
+                    }
+                    .shadow(color: .black.opacity(0.25), radius: 18, y: 10)
+                    .padding(.horizontal, 36)
+
+                VStack(spacing: 4) {
+                    Text(destination.name)
+                        .font(.system(size: 30, weight: .heavy))
+                        .foregroundStyle(.white)
+                    Text(destination.country)
+                        .font(.headline)
+                        .foregroundStyle(.white.opacity(0.85))
+                    Text("\(DateUtil.weekendLabel(destination.weekend)) · from \(destination.price.formattedRounded)")
+                        .font(.title3.weight(.bold))
+                        .foregroundStyle(.white)
+                        .padding(.top, 10)
+                }
+
+                Spacer(minLength: 0)
+
+                VStack(spacing: 12) {
+                    Button(action: onViewTrip) {
+                        Text("View trip")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                            .background(.white, in: Capsule())
+                            .foregroundStyle(Brand.coralDeep)
+                    }
+                    Button(action: onDismiss) {
+                        Text("Keep swiping")
+                            .font(.headline)
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                            .overlay(Capsule().stroke(.white.opacity(0.7), lineWidth: 1.5))
+                    }
+                }
+                .buttonStyle(.plain)
+                .padding(.horizontal, 36)
+                .padding(.bottom, 8)
+            }
+            .padding(.vertical, 24)
+            .scaleEffect(appeared ? 1 : 0.92)
+            .opacity(appeared ? 1 : 0)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("It's a match. \(destination.name), \(destination.country), weekends from \(destination.price.formattedRounded).")
+        .onAppear {
+            withAnimation(.spring(response: 0.45, dampingFraction: 0.75)) { appeared = true }
+        }
     }
 }
