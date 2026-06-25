@@ -27,3 +27,6 @@ Config/Secrets.xcconfig
 worker/node_modules/
 worker/.wrangler/
 worker/.dev.vars
+
+# UX-audit captured screenshots (regenerable via capture-app.sh)
+tools/ux-audit/shots/

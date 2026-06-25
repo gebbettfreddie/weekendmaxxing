@@ -50,6 +50,9 @@ final class OnboardingViewModel {
         self.store = store
         self.onFinish = onFinish
         self.preferences = store.preferences
+        if let start = UITestHooks.onboardingStartStep, let step = Step(rawValue: start) {
+            self.step = step
+        }
     }
 
     var isFirstStep: Bool { step == Step.allCases.first }
